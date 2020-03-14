@@ -24,17 +24,7 @@ const manageConnection = (connection) => {
         };
 
         const readyCallback = () => {
-            if (cluster.isMaster) {
-                loggerService.info('Mongoose connection established for Master Cluster');
-
-                return connection.close(() => {
-                    loggerService.info('MongoDB Connection closed');
-
-                    return resolve();
-                });
-            } else {
-                return resolve(connection);
-            }
+            return resolve(connection);
         };
 
         connection.on('error', errorCallback);
@@ -114,7 +104,6 @@ const connect = async () => {
         await manageConnection(mongoose.connection);
     } catch (e) {
         loggerService.error('Error: ' + JSON.stringify(e));
-        loggerService.error('Error: ' + e);
     }
 };
 
