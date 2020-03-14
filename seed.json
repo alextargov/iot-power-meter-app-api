@@ -1,0 +1,18 @@
+{
+    "measurement": [
+        {
+            "appliance": "main",
+            "current": 1.23,
+            "voltage": 219.4,
+            "createdAt": "2020-02-28T13:18:42.16Z",
+            "updatedAt": "2020-02-28T13:18:42.16Z"
+        },
+        {
+            "appliance": "main",
+            "current": 1.26,
+            "voltage": 216.3,
+            "createdAt": "2020-02-28T13:18:43.16Z",
+            "updatedAt": "2020-02-28T13:18:43.16Z"
+        }
+    ]
+}
