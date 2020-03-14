@@ -38,6 +38,26 @@ export const schema: convict.Schema<any> = {
             env: 'APP_LOG_LEVEL',
         },
     },
+    mongodb: {
+        host: {
+            doc: 'Application database host',
+            format: '*',
+            default: '127.0.0.1',
+            env: 'APP_DB_HOST'
+        },
+        port: {
+            doc: 'Application database port',
+            format: 'port',
+            default: 27017,
+            env: 'APP_DB_PORT'
+        },
+        database: {
+            doc: 'Application database name',
+            format: '*',
+            default: 'power-meter-app',
+            env: 'APP_DB_DATABASE'
+        },
+    },
     server: {
         cors: {
             methods: {
