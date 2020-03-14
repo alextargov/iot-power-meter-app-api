@@ -7,6 +7,7 @@
     },
     "main": "dist/index.js",
     "scripts": {
+        "start:dev": "ts-node -r tsconfig-paths/register src/index.ts",
         "test": "jest"
     },
     "repository": {
@@ -37,6 +38,7 @@
         "jest": "25.1.0",
         "nodemon": "2.0.2",
         "ts-jest": "25.2.1",
+        "tsconfig-paths": "3.9.0",
         "tslint": "6.1.0",
         "typescript": "3.8.3"
     },
