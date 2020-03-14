@@ -48,11 +48,9 @@ const getApplianceMeasurements = async (req: Request, res: Response) => {
 
     try {
         const result = await measurementService.getApplianceMeasurements(name);
-        console.log(result);
 
         return res.json(result);
     } catch (error) {
-        console.log(error);
         if (error.response) {
             throw error;
         }
