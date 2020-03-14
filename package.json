@@ -7,7 +7,7 @@
     },
     "main": "dist/index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "jest"
     },
     "repository": {
         "type": "git",
@@ -39,5 +39,25 @@
         "ts-jest": "25.2.1",
         "tslint": "6.1.0",
         "typescript": "3.8.3"
+    },
+    "jest": {
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js",
+            "jsx",
+            "json",
+            "node"
+        ],
+        "roots": [
+            "<rootDir>/src"
+        ],
+        "rootDir": ".",
+        "testRegex": "(\\.)(test|spec)\\.(jsx?|tsx?)$",
+        "transform": {
+            "^.+\\.(js|ts)$": "<rootDir>/node_modules/ts-jest"
+        },
+        "coverageDirectory": "./coverage",
+        "testEnvironment": "node"
     }
 }
