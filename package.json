@@ -1,0 +1,39 @@
+{
+    "name": "iot-power-meter-app-api",
+    "version": "0.0.1",
+    "description": "A simple REST API to communicate with incoming data and the ui",
+    "engines": {
+        "node": ">=13.8.0"
+    },
+    "main": "dist/index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/freeride8/iot-power-meter-app-api.git"
+    },
+    "author": "Alexander Targov",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/freeride8/iot-power-meter-app-api/issues"
+    },
+    "homepage": "https://github.com/freeride8/iot-power-meter-app-api#readme",
+    "dependencies": {
+        "body-parser": "1.19.0",
+        "cors": "2.8.5",
+        "express": "4.17.1",
+        "lodash": "4.17.15",
+        "ts-node": "8.6.2"
+    },
+    "devDependencies": {
+        "@types/express": "4.17.3",
+        "@types/jest": "25.1.4",
+        "@types/lodash": "4.14.149",
+        "jest": "25.1.0",
+        "nodemon": "2.0.2",
+        "ts-jest": "25.2.1",
+        "tslint": "6.1.0",
+        "typescript": "3.8.3"
+    }
+}
