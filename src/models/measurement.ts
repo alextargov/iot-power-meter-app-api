@@ -5,6 +5,7 @@ export interface IMeasurement {
     appliance: string;
     current: number;
     voltage: number;
+    power?: number;
 
     createdAt?: Date;
     updatedAt?: Date;
