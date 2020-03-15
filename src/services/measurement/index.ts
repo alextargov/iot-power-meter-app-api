@@ -3,13 +3,13 @@ import { IMeasurement, Measurement } from '../../models/measurement';
 
 const logNamespace = 'MeasurementService';
 
-const  basePipeline = [{
+const basePipeline = [{
     $addFields: {
         power: {
             $multiply: [ "$current", "$voltage" ]
         }
     }
-}]
+}];
 
 const createMeasurement = async (content: IMeasurement): Promise<IMeasurement> => {
     loggerService.debug(`[${logNamespace}]: createMeasurement(): Creating measurement.`);
@@ -27,11 +27,9 @@ const createMeasurement = async (content: IMeasurement): Promise<IMeasurement> =
 };
 
 const getApplianceMeasurements = async (name: string): Promise<IMeasurement[]> => {
-    const pipeline = [
-        {
-            $match: { appliance: name }
-        },
-    ].concat(basePipeline as any);
+    const pipeline = [{
+        $match: { appliance: name }
+    }].concat(basePipeline as any);
 
     const result = await Measurement.aggregate(pipeline).exec();
     return result || [];
