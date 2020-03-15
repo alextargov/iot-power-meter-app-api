@@ -1,12 +1,11 @@
 import { forOwn } from 'lodash';
 import mongoose from 'mongoose';
-import * as cluster from 'cluster';
 import { Promise as bluebirdPromise } from 'bluebird';
 
 import { loggerService } from '../logger';
 import { config } from '../../config';
 
-const manageConnection = (connection) => {
+const manageConnection = async (connection) => {
     return new Promise((resolveFunction, reject) => {
         let resolved = false;
 
@@ -15,7 +14,7 @@ const manageConnection = (connection) => {
             resolveFunction(data);
         };
 
-        const errorCallback = err => {
+        const errorCallback = (err) => {
             if (!resolved) {
                 return reject(err);
             }
@@ -33,49 +32,49 @@ const manageConnection = (connection) => {
 };
 
 const buildConnectionString = (connectionConfig) => {
-    let connectionStringComponents = [
-        'mongodb://'
+    const connectionStringComponents = [
+        'mongodb://',
     ];
 
-    //Credentials
+    // Credentials
     if (connectionConfig.username !== undefined && connectionConfig.password !== undefined) {
-        connectionStringComponents.push(connectionConfig.username + ':' + connectionConfig.password + '@');
+        connectionStringComponents.push(`${connectionConfig.username}:${connectionConfig.password}@`);
     }
 
-    //Host
+    // Host
     if (connectionConfig.host === undefined) {
         throw new Error('Host was not defined in the config');
     }
     connectionStringComponents.push(connectionConfig.host);
 
-    //Port
+    // Port
     if (connectionConfig.port !== undefined) {
         connectionStringComponents.push(':' + connectionConfig.port);
     }
 
-    //Database
+    // Database
     if (connectionConfig.database === undefined) {
         throw new Error('Database was not defined in the config');
     }
     connectionStringComponents.push('/' + connectionConfig.database);
 
-    //OptionalItems
-    let optionalItems = [];
+    // OptionalItems
+    const optionalItems = [];
 
-    //Replica Set
+    // Replica Set
     if (connectionConfig.replicaSet !== undefined) {
         optionalItems.push('replicaSet=' + connectionConfig.replicaSet);
     }
 
     if (connectionConfig.options !== undefined) {
         forOwn(connectionConfig.options, (value, key) => {
-            optionalItems.push(key + '=' + value);
+            optionalItems.push(`${key}=${value}`);
         });
     }
 
     let connectionString = connectionStringComponents.join('');
     if (optionalItems.length > 0) {
-        connectionString = connectionString + '?' + optionalItems.join('&');
+        connectionString = `${connectionString}?${optionalItems.join('&')}`;
     }
 
     return connectionString;
@@ -97,6 +96,7 @@ const connect = async () => {
     mongoose.Promise = bluebirdPromise;
 
     try {
+        // tslint:disable-next-line: no-floating-promises
         mongoose.connect(connectionString, options);
 
         loggerService.verbose('Default Mongoose connection established');

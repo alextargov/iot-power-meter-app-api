@@ -9,43 +9,43 @@ export interface IMeasurement {
 
     createdAt?: Date;
     updatedAt?: Date;
-};
+}
 
 interface IMeasurementDocument extends IMeasurement, mongoose.Document {
-    id?: string
-};
+    id?: string;
+}
 
 const schemaOptions = {
     collection: 'measurements',
     minimize: false,
     strict: false,
     versionKey: false,
-    timestamps: true
+    timestamps: true,
 };
 
-const MeasurementSchema = new mongoose.Schema({
+const measurementSchema = new mongoose.Schema({
     appliance: {
         type: mongoose.SchemaTypes.String,
-        required: true
+        required: true,
     },
     current: {
         type: mongoose.SchemaTypes.Number,
-        required: true
+        required: true,
     },
     voltage: {
         type: mongoose.SchemaTypes.Number,
-        required: true
+        required: true,
     },
     createdAt: {
         type: mongoose.SchemaTypes.Date,
-        required: true
+        required: true,
     },
     updatedAt: {
         type: mongoose.SchemaTypes.Date,
-        required: false
+        required: false,
     },
 }, schemaOptions);
 
-const Measurement = mongoose.model<IMeasurementDocument>('Measurements', MeasurementSchema);
+const measurement = mongoose.model<IMeasurementDocument>('Measurements', measurementSchema);
 
-export { Measurement };
+export { measurement as Measurement };

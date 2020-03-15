@@ -16,5 +16,8 @@ mongo.connect()
             const host = [undefined, '127.0.0.1', '::', '::1'].includes(address) ? 'localhost' : address;
 
             loggerService.info(`Server listening at http://${host}:${port}`);
-        })
+        });
+    })
+    .catch((e) => {
+        loggerService.error(`Server error ${JSON.stringify(e)}`);
     });

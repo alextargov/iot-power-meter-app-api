@@ -7,6 +7,7 @@
     },
     "main": "dist/index.js",
     "scripts": {
+        "lint": "tslint -p \"tsconfig.json\" \"./src/**/*.ts\" -t verbose",
         "start:dev": "ts-node -r tsconfig-paths/register src/index.ts",
         "test": "jest"
     },
@@ -22,7 +23,6 @@
     "homepage": "https://github.com/freeride8/iot-power-meter-app-api#readme",
     "dependencies": {
         "bluebird": "3.7.2",
-        "body-parser": "1.19.0",
         "convict": "5.2.0",
         "cors": "2.8.5",
         "cron": "1.8.2",
@@ -30,6 +30,7 @@
         "express-async-handler": "1.1.4",
         "helmet": "3.21.3",
         "http-status-codes": "1.4.0",
+        "js-yaml": "3.13.1",
         "lodash": "4.17.15",
         "mongoose": "5.9.4",
         "morgan": "1.9.1",

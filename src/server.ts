@@ -1,4 +1,3 @@
-import bodyParser from 'body-parser';
 import cors from 'cors';
 import { default as express } from 'express';
 import helmet from 'helmet';
@@ -13,8 +12,8 @@ export const app = express();
 
 app.use(helmet());
 app.use(cors(config.get('server.cors')));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(morgan('combined', {
     stream: {
