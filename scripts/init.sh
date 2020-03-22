@@ -54,7 +54,7 @@ importDontOverwrite()
         fi
 
         ((count++))
-    done < "./collections/$1.json"
+    done < "/data/db2/collections/$1.json"
 
     echo "Imported $1.json | $count lines considered  |  $numSkipped lines skipped due to duplicate key  |  $numImported lines imported  |  $numErrors errors encountered"
 }
