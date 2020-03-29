@@ -35,8 +35,18 @@ const getApplianceMeasurements = async (name: string): Promise<IMeasurement[]> =
     return result || [];
 };
 
-const getMeasurements = async (): Promise<IMeasurement[]> => {
-    const result = await Measurement.aggregate(basePipeline).exec();
+const getMeasurements = async (startDate: Date, endDate: Date): Promise<IMeasurement[]> => {
+    const pipeline = [{
+        $match: {
+            createdAt: {
+                $gte: new Date(startDate),
+                $lt: new Date(endDate),
+            },
+        },
+    }].concat(basePipeline as any);
+
+    console.log(pipeline[0].$match);
+    const result = await Measurement.aggregate(pipeline).exec();
 
     return result || [];
 };

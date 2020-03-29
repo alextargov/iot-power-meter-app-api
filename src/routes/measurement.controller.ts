@@ -11,6 +11,7 @@ const router = Router();
 
 const createMeasurement = async (req: Request, res: Response) => {
     const content = req.body;
+    const { startDate, endDate } = req.query;
 
     if (some([content], isEmpty)) {
         loggerService.error(`[${logNamespace}]: Unable to create measurement due to bad request.`);
@@ -22,7 +23,7 @@ const createMeasurement = async (req: Request, res: Response) => {
 
     try {
         await measurementService.createMeasurement(content);
-        const result = await measurementService.getMeasurements();
+        const result = await measurementService.getMeasurements(startDate, endDate);
         return res.json(result);
     } catch (error) {
         loggerService.error(`[${logNamespace}]: Could not create measurement due to error: ${error}`);
@@ -32,8 +33,9 @@ const createMeasurement = async (req: Request, res: Response) => {
 };
 
 const getMeasurements = async (req: Request, res: Response) => {
+    const { startDate, endDate } = req.query;
     try {
-        const result = await measurementService.getMeasurements();
+        const result = await measurementService.getMeasurements(startDate, endDate);
 
         return res.json(result);
     } catch (error) {
