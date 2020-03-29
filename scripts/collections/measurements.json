@@ -1,5 +1,12 @@
 {"_id":"5e6d1e99d21eba028b95e762","appliance":"main","current":1.20,"voltage":219.1,"createdAt":"2020-02-20T13:18:42.16Z","updatedAt":"2020-02-20T13:18:42.16Z"}
 {"_id":"5e6d1e99d21eba028b95e763","appliance":"main","current":1.20,"voltage":216.4,"createdAt":"2020-02-20T13:18:43.16Z","updatedAt":"2020-02-20T13:18:43.16Z"}
-{"_id":"5e6d1e99d21eba028b95e764","appliance":"main","current":1.23,"voltage":219.8,"createdAt":"2020-03-14T18:12:41.109Z","updatedAt":"2020-03-14T18:12:41.109Z"}
-{"_id":"5e6d2023d21eba028b95e765","appliance":"main","current":0.83,"voltage":219.9,"createdAt":"2020-03-14T18:19:15.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
+{"_id":"5e6d1e99d21eba028b95e764","appliance":"main","current":1.23,"voltage":219.8,"createdAt":"2020-03-14T18:12:00.109Z","updatedAt":"2020-03-14T18:12:41.109Z"}
+{"_id":"5e6d2023d21eba028b95e765","appliance":"main","current":1.24,"voltage":219.9,"createdAt":"2020-03-14T18:13:00.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
+{"_id":"5e6d2023d21eba028b95e766","appliance":"main","current":1.53,"voltage":219.9,"createdAt":"2020-03-14T18:14:00.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
+{"_id":"5e6d2023d21eba028b95e767","appliance":"main","current":1.65,"voltage":219.9,"createdAt":"2020-03-14T18:15:00.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
+{"_id":"5e6d2023d21eba028b95e768","appliance":"main","current":1.44,"voltage":219.9,"createdAt":"2020-03-14T18:16:00.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
+{"_id":"5e6d2023d21eba028b95e769","appliance":"main","current":1.42,"voltage":219.9,"createdAt":"2020-03-14T18:17:00.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
+{"_id":"5e6d2023d21eba028b95e770","appliance":"main","current":1.54,"voltage":219.9,"createdAt":"2020-03-14T18:18:00.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
+{"_id":"5e6d2023d21eba028b95e771","appliance":"main","current":1.67,"voltage":219.9,"createdAt":"2020-03-14T18:19:00.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
+{"_id":"5e6d2023d21eba028b95e772","appliance":"main","current":1.22,"voltage":219.9,"createdAt":"2020-03-14T18:20:00.360Z","updatedAt":"2020-03-14T18:19:15.360Z"}
 {"_id":"5e6de54dbf3ec5123b368970","appliance":"secondary","current":2.41,"voltage":212.1,"createdAt":"2020-03-15T08:20:29.668Z","updatedAt":"2020-03-15T08:20:29.668Z"}

@@ -1,1 +1,1 @@
-{"_id":"5e6d1e99d21eba028b95e761","key":"timeFrames","value":["last7days","last30days","today","custom"]}
+{"_id":"5e6d1e99d21eba028b95e761","key":"timeFrames","value":[{"frame":"last7days","name":"Last 7 days"},{"frame":"last30days","name":"Last 30 days"},{"frame":"today","name":"Today"},{"frame":"custom","name":"Custom"}]}
