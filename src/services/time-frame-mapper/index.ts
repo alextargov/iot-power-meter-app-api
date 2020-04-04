@@ -20,8 +20,8 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     [config.frame]: {
                         frame: config.frame,
                         // tslint:disable-next-line: no-magic-numbers
-                        startDate: moment().subtract(30, 'days').toDate(),
-                        endDate: moment().toDate(),
+                        startDate: moment.utc().subtract(30, 'days').startOf('day').toDate(),
+                        endDate: moment.utc().endOf('day').toDate(),
                     },
                 };
             case TimeFrames.last7days:
@@ -30,8 +30,8 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     [config.frame]: {
                         frame: config.frame,
                         // tslint:disable-next-line: no-magic-numbers
-                        startDate: moment().subtract(7, 'days').toDate(),
-                        endDate: moment().toDate(),
+                        startDate: moment.utc().subtract(7, 'days').startOf('day').toDate(),
+                        endDate: moment.utc().endOf('day').toDate(),
                     },
                 };
             case TimeFrames.today:
@@ -39,8 +39,8 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     ...collection,
                     [config.frame]: {
                         frame: config.frame,
-                        startDate: moment().startOf('day').toDate(),
-                        endDate: moment().toDate(),
+                        startDate: moment.utc().startOf('day').toDate(),
+                        endDate: moment.utc().endOf('day').toDate(),
                     },
                 };
             case TimeFrames.custom:
@@ -49,8 +49,8 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     ...collection,
                     [config.frame]: {
                         frame: config.frame,
-                        startDate: moment(routeTimeFrame.startDate).startOf('day').toDate(),
-                        endDate: moment(routeTimeFrame.endDate).endOf('day').toDate(),
+                        startDate: moment.utc(routeTimeFrame.startDate).startOf('day').toDate(),
+                        endDate: moment.utc(routeTimeFrame.endDate).endOf('day').toDate(),
                     },
                 };
         }
