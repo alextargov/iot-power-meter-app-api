@@ -4,9 +4,15 @@ import { timeFrameMapperService } from '../services/time-frame-mapper';
 
 export const timeFrameMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     if (req.query && req.query.frame) {
-        const timeFrames = await timeFrameMapperService.mapTimeFrames(req.query.frame);
-        req.query = timeFrames ? timeFrames[req.query.frame] : req.query;
+        const data = {
+            frame: req.query.frame,
+            startDate: req.query.startDate ? new Date(req.query.startDate) : new Date(),
+            endDate: req.query.endDate ? new Date(req.query.endDate) : new Date(),
+        };
 
-        return next();
+        const timeFrames = await timeFrameMapperService.mapTimeFrames(data);
+        req.query = timeFrames ? timeFrames[req.query.frame] : req.query;
     }
+
+    return next();
 };
