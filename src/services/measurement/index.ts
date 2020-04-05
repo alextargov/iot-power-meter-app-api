@@ -26,8 +26,6 @@ const createMeasurement = async (content: IMeasurement): Promise<IMeasurement> =
 
     const data = {
         ...content,
-        createdAt: moment.utc().toDate(),
-        updatedAt: moment.utc().toDate(),
     } as IMeasurement;
 
     await Measurement.create(data);
