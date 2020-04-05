@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 import { loggerService } from '../logger';
 import { IMeasurement, Measurement } from '../../models/measurement';
 
@@ -24,8 +26,8 @@ const createMeasurement = async (content: IMeasurement): Promise<IMeasurement> =
 
     const data = {
         ...content,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: moment.utc().toDate(),
+        updatedAt: moment.utc().toDate(),
     } as IMeasurement;
 
     await Measurement.create(data);
