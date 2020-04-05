@@ -34,6 +34,7 @@ const createMeasurement = async (req: Request, res: Response) => {
 
 const getMeasurements = async (req: Request, res: Response) => {
     const { startDate, endDate } = req.query;
+
     try {
         const result = await measurementService.getMeasurements(startDate, endDate);
 

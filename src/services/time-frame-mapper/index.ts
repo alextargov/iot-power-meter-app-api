@@ -1,3 +1,4 @@
+import { isUndefined } from 'lodash';
 import moment from 'moment';
 
 import { loggerService } from '../logger';
@@ -11,6 +12,7 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
     loggerService.debug(`[${logNamespace}]: mapTimeFrames(): Get time frames.`);
 
     const result = await Config.findOne({ key: 'timeFrames' }).exec();
+    const wholeDay = isUndefined(routeTimeFrame.wholeDay);
 
     return result.value.reduce((collection, config) => {
         switch (config.frame) {
@@ -49,8 +51,12 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     ...collection,
                     [config.frame]: {
                         frame: config.frame,
-                        startDate: moment.utc(routeTimeFrame.startDate).startOf('day').toDate(),
-                        endDate: moment.utc(routeTimeFrame.endDate).endOf('day').toDate(),
+                        startDate: wholeDay ?
+                            moment.utc(routeTimeFrame.startDate).startOf('day').toDate() :
+                            moment.utc(routeTimeFrame.startDate).toDate(),
+                        endDate: wholeDay ?
+                            moment.utc(routeTimeFrame.endDate).endOf('day').toDate() :
+                            moment.utc(routeTimeFrame.endDate).toDate(),
                     },
                 };
         }

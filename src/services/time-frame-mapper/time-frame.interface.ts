@@ -4,4 +4,5 @@ export interface ITimeFrame {
     frame: TimeFrames;
     startDate: Date;
     endDate: Date;
+    wholeDay?: boolean;
 }
