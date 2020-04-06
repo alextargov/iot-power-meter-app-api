@@ -16,7 +16,7 @@ const schemaOptions = {
 
 const measurementSchema = new mongoose.Schema({
     measurements: {
-        type: mongoose.SchemaTypes.Array,
+        type: mongoose.SchemaTypes.Mixed,
         required: true,
     },
     date: {
