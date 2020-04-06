@@ -38,7 +38,7 @@ const measurementSchema = new mongoose.Schema({
     },
     createdAt: {
         type: mongoose.SchemaTypes.Date,
-        required: true,
+        required: false,
     },
     updatedAt: {
         type: mongoose.SchemaTypes.Date,
