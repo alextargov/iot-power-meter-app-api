@@ -75,7 +75,7 @@ export const schema: convict.Schema<any> = {
             preflightContinue: {
                 doc: 'Whether to allow preflight to continue to the next handler.',
                 format: Boolean,
-                default: true,
+                default: false,
                 env: 'APP_CORS_PREFLIGHT_CONTINUE',
             },
             optionsSuccessStatus: {
@@ -88,7 +88,7 @@ export const schema: convict.Schema<any> = {
         port: {
             doc: 'The server listening port.',
             format: 'port',
-            default: 3000,
+            default: 3200,
             env: 'PORT',
         },
         proxy: {
