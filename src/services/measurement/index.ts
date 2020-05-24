@@ -16,6 +16,7 @@ const basePipeline = [
     {
         $project: {
             created_at: 0,
+            updatedAt: 0,
         },
     },
 ];
@@ -42,7 +43,7 @@ const getApplianceMeasurements = async (name: string): Promise<IMeasurement[]> =
     return result || [];
 };
 
-const getMeasurements = async (startDate: Date, endDate: Date): Promise<IMeasurement[]> => {
+const getLiveMeasurements = async (startDate: Date, endDate: Date): Promise<IMeasurement[]> => {
     const pipeline = [
         {
             $addFields: {
@@ -66,8 +67,22 @@ const getMeasurements = async (startDate: Date, endDate: Date): Promise<IMeasure
     return result || [];
 };
 
+const deleteMeasurements = async (startDate: Date, endDate: Date): Promise<void> => {
+    const pipeline = [{
+        $match: {
+            createdAt: {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate),
+            },
+        },
+    }];
+
+    await Measurement.deleteMany(pipeline).exec();
+};
+
 export const measurementService = {
     createMeasurement,
-    getMeasurements,
+    getLiveMeasurements,
+    deleteMeasurements,
     getApplianceMeasurements,
 };
