@@ -1,17 +1,18 @@
 import { Request, Response, Router } from 'express';
 import expressAsyncHandler from 'express-async-handler';
-import * as HttpStatus from 'http-status-codes';
 import { isEmpty, some } from 'lodash';
 
 import { loggerService } from '../services/logger';
 import { measurementService } from '../services/measurement';
+import { historicDataService } from '../services/historic-data';
+import { ITimeFrame } from '../services/time-frame-mapper/time-frame.interface';
 
 const logNamespace = 'MeasurementController';
 const router = Router();
 
 const createMeasurement = async (req: Request, res: Response) => {
     const content = req.body;
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate } = req.query as unknown as { startDate: Date, endDate: Date };
 
     if (some([content], isEmpty)) {
         loggerService.error(`[${logNamespace}]: Unable to create measurement due to bad request.`);
@@ -23,7 +24,9 @@ const createMeasurement = async (req: Request, res: Response) => {
 
     try {
         await measurementService.createMeasurement(content);
-        const result = await measurementService.getMeasurements(startDate, endDate);
+
+        const result = await measurementService.getLiveMeasurements(startDate, endDate);
+
         return res.json(result);
     } catch (error) {
         loggerService.error(`[${logNamespace}]: Could not create measurement due to error: ${error}`);
@@ -33,12 +36,15 @@ const createMeasurement = async (req: Request, res: Response) => {
 };
 
 const getMeasurements = async (req: Request, res: Response) => {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, frame } = req.query as unknown as ITimeFrame;
 
     try {
-        const result = await measurementService.getMeasurements(startDate, endDate);
+        const getLiveMeasurements = measurementService.getLiveMeasurements(startDate, endDate);
+        const getHistoricData = historicDataService.getHistoricData(startDate, endDate, frame);
 
-        return res.json(result);
+        const [liveMeasurements, historicData] = await Promise.all([getLiveMeasurements, getHistoricData]);
+
+        return res.json([].concat(liveMeasurements, historicData));
     } catch (error) {
         loggerService.error(`[${logNamespace}]: Could not list measurements due to error: ${error}`);
 

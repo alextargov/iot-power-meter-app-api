@@ -2,19 +2,21 @@ import moment from 'moment';
 
 import { Request, Response, NextFunction } from 'express';
 import { timeFrameMapperService } from '../services/time-frame-mapper';
+import { ITimeFrame } from '../services/time-frame-mapper/time-frame.interface';
 
 export const timeFrameMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     if (req.query && req.query.frame) {
+        const { frame, startDate, endDate, wholeDay } = req.query as unknown as ITimeFrame;
         const data = {
-            frame: req.query.frame,
-            startDate: req.query.startDate ? moment.utc(new Date(req.query.startDate)).toDate() : moment.utc().toDate(),
-            endDate: req.query.endDate ? moment.utc(new Date(req.query.endDate)).toDate() : moment.utc().toDate(),
-            wholeDay: req.query.wholeDay,
+            frame,
+            startDate: req.query.startDate ? moment(new Date(startDate)).toDate() : moment().toDate(),
+            endDate: req.query.endDate ? moment(new Date(endDate)).toDate() : moment().toDate(),
+            wholeDay,
         };
 
         const timeFrames = await timeFrameMapperService.mapTimeFrames(data);
 
-        req.query = timeFrames ? timeFrames[req.query.frame] : req.query;
+        req.query = timeFrames ? timeFrames[frame] : req.query;
     }
 
     return next();

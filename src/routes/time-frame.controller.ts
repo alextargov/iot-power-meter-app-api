@@ -9,7 +9,7 @@ const logNamespace = 'TimeFrameController';
 const router = Router();
 
 const getTimeFrame = async (req: Request, res: Response) => {
-    const { frame, startDate, endDate } = req.query;
+    const { frame, startDate, endDate } = req.query as unknown as ITimeFrame;
 
     try {
         const timeFrames: ITimeFrame = {
