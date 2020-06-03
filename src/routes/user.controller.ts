@@ -6,17 +6,13 @@ import bcrypt from 'bcrypt';
 
 import { User } from '../models/user';
 import { loggerService } from '../services/logger';
+import { authenticationService } from '../services/authentication';
 
 const logNamespace = 'UserController';
 const router = Router();
 
 const login = (req: Request, res: Response) => {
     passport.authenticate('local', { session: false}, (err, user, info) => {
-        console.log('req.body', req.body);
-        console.log('err', err);
-        console.log('user', user);
-        console.log(info);
-
         if (err || !user) {
             return res.status(400).json({
                 message: err.message,
@@ -27,8 +23,10 @@ const login = (req: Request, res: Response) => {
             if (loginError) {
                 res.send(loginError);
             }
-
-            const token = jwt.sign(user, 'your_jwt_secret');
+            const token = authenticationService.sign(user, {
+                audience: 'clientId',
+                subject: user.username,
+            });
             return res.json({ token });
         });
     })(req, res);

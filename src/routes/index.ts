@@ -12,7 +12,7 @@ const router = Router();
 
 router.use(timeFrameMiddleware);
 
-router.use('/measurement', passport.authenticate('jwt', { session: false, authInfo: true }), measurementController);
+router.use('/measurement', measurementController);
 router.use('/config', configController);
 router.use('/timeFrame', timeFrameController);
 router.use('/user', userController);

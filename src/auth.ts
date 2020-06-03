@@ -2,24 +2,30 @@ import passport from 'passport';
 import passportJWT from 'passport-jwt';
 import passportLocal from 'passport-local';
 import bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { loggerService } from './services/logger';
 import { User } from './models/user';
+import { config } from './config';
 
 const logNamespace = 'AuthConfig';
 const extractJWT = passportJWT.ExtractJwt;
+const publicKey  = fs.readFileSync(path.join(__dirname, 'secrets', 'public.key'), 'utf8');
 
 passport.use(new passportLocal.Strategy(async (username, password, done) => {
     try {
         const user = await User.findOne({ username }).lean().exec();
 
         if (!user) {
+            loggerService.info(`[${logNamespace}] Could not find a user`);
             return done(null, false, { message: 'Incorrect username.' });
         }
 
         const isEqual = await bcrypt.compare(password, user.password);
 
         if (!isEqual) {
+            loggerService.info(`[${logNamespace}] Passwords do not match for user ${user.username}`);
             return done(null, false, { message: 'Incorrect password.' });
         }
 
@@ -31,8 +37,17 @@ passport.use(new passportLocal.Strategy(async (username, password, done) => {
 }));
 
 passport.use(new passportJWT.Strategy(
-    { jwtFromRequest: extractJWT.fromAuthHeaderAsBearerToken(), secretOrKey: 'your_jwt_secret' },
+    {
+        jwtFromRequest: extractJWT.fromAuthHeaderAsBearerToken(),
+        secretOrKey: publicKey,
+        algorithms: ['RS256'],
+        issuer: config.get('server.auth.issuer'),
+    },
     async (jwtPayload, cb) => {
+        if (!jwtPayload) {
+            return cb({ status: 500, error: 'JWT is empty' });
+        }
+
         try {
             const user = await User.findOne({ username: jwtPayload.username }).lean().exec();
 

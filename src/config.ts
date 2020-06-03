@@ -97,6 +97,14 @@ export const schema: convict.Schema<any> = {
             default: false,
             env: 'APP_PROXY',
         },
+        auth: {
+            issuer: {
+                doc: 'Issuer for JWT.',
+                format: '*',
+                default: 'iot-api',
+                env: 'APP_AUTH_ISSUER',
+            },
+        },
     },
 };
 
