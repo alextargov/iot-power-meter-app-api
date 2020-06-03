@@ -1,13 +1,11 @@
 import { AddressInfo } from 'net';
 
-import { random } from 'lodash';
 import { config } from './config';
 import { app } from './server';
 import { loggerService } from './services/logger';
 import { mongo } from './services/mongoose';
-import { IMeasurement } from './models/measurement';
-import { measurementService } from './services/measurement';
 import { historicDataService } from './services/historic-data';
+import { simulationService } from './services/simulation';
 
 mongo.connect()
     .then(() => {
@@ -20,16 +18,10 @@ mongo.connect()
             const host = [undefined, '127.0.0.1', '::', '::1'].includes(address) ? 'localhost' : address;
 
             loggerService.info(`Server listening at http://${host}:${port}`);
-            setInterval(() => {
-                const data = {
-                    voltage: random(210, 225),
-                    appliance: 'main',
-                    current: random(1, 5.99),
-                } as IMeasurement;
-                measurementService.createMeasurement(data).then().catch()
-            }, 5000);
 
             const cronJob = historicDataService.initCronJob();
+
+            simulationService.generateData();
 
             historicDataService.startJob(cronJob);
         });
