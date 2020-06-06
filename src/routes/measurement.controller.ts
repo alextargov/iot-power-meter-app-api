@@ -12,7 +12,7 @@ const router = Router();
 
 const createMeasurement = async (req: Request, res: Response) => {
     const content = req.body;
-    const { startDate, endDate } = req.query as unknown as { startDate: Date, endDate: Date };
+    const { startDate, endDate } = req.query as unknown as ITimeFrame;
 
     if (some([content], isEmpty)) {
         loggerService.error(`[${logNamespace}]: Unable to create measurement due to bad request.`);

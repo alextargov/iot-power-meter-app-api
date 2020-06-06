@@ -2,13 +2,13 @@ import mongoose from 'mongoose';
 
 export interface IMeasurement {
     id?: string;
-    appliance: string;
+    appliance?: string;
     current: number;
     voltage: number;
     power?: number;
 
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: number | Date;
+    updatedAt?: number;
 }
 
 interface IMeasurementDocument extends IMeasurement, mongoose.Document {
@@ -20,7 +20,7 @@ const schemaOptions = {
     minimize: false,
     strict: false,
     versionKey: false,
-    timestamps: true,
+    timestamps: false,
 };
 
 const measurementSchema = new mongoose.Schema({
@@ -37,11 +37,7 @@ const measurementSchema = new mongoose.Schema({
         required: true,
     },
     createdAt: {
-        type: mongoose.SchemaTypes.Date,
-        required: false,
-    },
-    updatedAt: {
-        type: mongoose.SchemaTypes.Date,
+        type: mongoose.SchemaTypes.Number,
         required: false,
     },
 }, schemaOptions);

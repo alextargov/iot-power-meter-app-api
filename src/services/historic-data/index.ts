@@ -3,7 +3,7 @@ import moment from 'moment';
 
 import { loggerService } from '../logger';
 import { measurementService } from '../measurement';
-import { MeasurementHistoric } from '../../models/measurement.historic';
+import { MeasurementHistoric, IMeasurementHistoric } from '../../models/measurement.historic';
 import { TimeFrames } from '../time-frame-mapper/time-frames.enum';
 import { IMeasurement } from '../../models/measurement';
 
@@ -24,24 +24,52 @@ const startJob = (job: CronJob) => {
 };
 
 const processHistoricData = async () => {
-    const processStartDay = moment.utc().subtract(1, 'day').startOf('day').toDate();
-    const processEndDay = moment.utc().subtract(1, 'day').endOf('day').toDate();
+    const processStartDay = moment.utc().subtract(1, 'day').startOf('day').valueOf();
+    const processEndDay = moment.utc().subtract(1, 'day').endOf('day').valueOf();
 
     loggerService.debug(`[${logNamespace}]: processHistoricData(): Processing historic data from day ${processStartDay}`);
 
     try {
-        const measurement = await measurementService.getLiveMeasurements(processStartDay, processEndDay);
+        const measurements = await measurementService.getLiveMeasurements(processStartDay, processEndDay);
 
-        await MeasurementHistoric.create({
-            date: processStartDay,
-            measurements: measurement,
-        });
+        if (measurements.length) {
+            let current = 0;
+            let voltage = 0;
+            let power = 0;
+
+            const measurementsToDate: IMeasurement[] = measurements.map((measurement) => {
+                current += measurement.current;
+                voltage += measurement.voltage;
+                power += measurement.current;
+
+                return {
+                    ...measurement,
+                    createdAt: new Date(measurement.createdAt),
+                };
+            });
+
+            const measurementHistoric: IMeasurementHistoric = {
+                date: processStartDay,
+                measurements: measurementsToDate,
+                averageCurrent: current / measurements.length,
+                averageVoltage: voltage / measurements.length,
+                averagePower: power / measurements.length,
+            };
+
+            await MeasurementHistoric.create({
+
+            });
+        }
     } catch (err) {
         loggerService.error(`[${logNamespace}]: processHistoricData(): Error ${processStartDay}`);
     }
 };
 
 const simplifyData = (data: IMeasurement[], timeFrame: TimeFrames): IMeasurement[] => {
+    if (!data) {
+        return [];
+    }
+
     let startOfType: moment.unitOfTime.StartOf;
 
     switch (timeFrame) {
@@ -57,9 +85,9 @@ const simplifyData = (data: IMeasurement[], timeFrame: TimeFrames): IMeasurement
         default:
             startOfType = 'minute';
     }
-    console.log('simplifyData', data);
+
     const filtered = data.reduce((collection, item) => {
-        const date = moment.utc(item.createdAt).startOf(startOfType).unix();
+        const date = moment.utc(item.createdAt).startOf(startOfType).valueOf();
 
         if (!collection[date]) {
             return {
@@ -89,35 +117,27 @@ const simplifyData = (data: IMeasurement[], timeFrame: TimeFrames): IMeasurement
             },
         };
     }, {} as any);
-    console.log('simplifyData', filtered);
 
     return Object.values(filtered).map((item: any) => ({
-        createdAt: moment.unix(item.data.createdAt).toDate(),
+        createdAt: new Date(item.data.createdAt * 1000).getTime(),
         current: item.data.current / item.iteration,
         voltage: item.data.voltage / item.iteration,
         power: item.data.power / item.iteration,
     }));
 };
 
-const getHistoricData = async (startDate: Date, endDate: Date, frame: TimeFrames) => {
+const getHistoricData = async (startDate: number, endDate: number, frame: TimeFrames) => {
     loggerService.debug(
         `[${logNamespace}]: getHistoricData(): Get historic data from ${startDate} to ${endDate} in the time frame ${frame}`,
     );
-    console.log(startDate, endDate, frame);
+
     try {
         const pipeline = [
             {
-                $addFields: {
-                    measurementDate: {
-                        $toDate: '$date',
-                    },
-                },
-            },
-            {
                 $match: {
-                    measurementDate: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate),
+                    date: {
+                        $gte: startDate,
+                        $lte: endDate,
                     },
                 },
             },
@@ -131,7 +151,7 @@ const getHistoricData = async (startDate: Date, endDate: Date, frame: TimeFrames
 
         const data = (await MeasurementHistoric.aggregate(pipeline).exec())[0];
 
-        return simplifyData(data.measurements, frame);
+        return simplifyData(data?.measurements, frame);
     } catch (err) {
         loggerService.error(`[${logNamespace}]: getHistoricData(): Error ${err}`);
     }

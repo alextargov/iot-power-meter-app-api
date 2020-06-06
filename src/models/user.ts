@@ -5,8 +5,8 @@ export interface IUser {
     username: string;
     password: string;
 
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: number;
+    updatedAt?: number;
 }
 
 export interface IUserDocument extends IUser, mongoose.Document {
@@ -33,7 +33,7 @@ const userSchema = new Schema(
             required: true,
         },
         createdAt: {
-            type: mongoose.SchemaTypes.Date,
+            type: mongoose.SchemaTypes.Number,
         },
     },
     schemaOptions,

@@ -1,5 +1,3 @@
-import moment from 'moment';
-
 import { loggerService } from '../logger';
 import { IMeasurement, Measurement } from '../../models/measurement';
 
@@ -15,7 +13,6 @@ const basePipeline = [
     },
     {
         $project: {
-            created_at: 0,
             updatedAt: 0,
         },
     },
@@ -43,20 +40,17 @@ const getApplianceMeasurements = async (name: string): Promise<IMeasurement[]> =
     return result || [];
 };
 
-const getLiveMeasurements = async (startDate: Date, endDate: Date): Promise<IMeasurement[]> => {
+const getLiveMeasurements = async (startDate: number, endDate: number): Promise<IMeasurement[]> => {
+    loggerService.debug(
+        `[${logNamespace}]: getLiveMeasurements(): Get live data from ${startDate} to ${endDate}`,
+    );
+
     const pipeline = [
         {
-            $addFields: {
-                created_at: {
-                    $toDate: '$createdAt',
-                },
-            },
-        },
-        {
             $match: {
-                created_at: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate),
+                createdAt: {
+                    $gte: startDate,
+                    $lte: endDate,
                 },
             },
         },
@@ -67,12 +61,12 @@ const getLiveMeasurements = async (startDate: Date, endDate: Date): Promise<IMea
     return result || [];
 };
 
-const deleteMeasurements = async (startDate: Date, endDate: Date): Promise<void> => {
+const deleteMeasurements = async (startDate: number, endDate: number): Promise<void> => {
     const pipeline = [{
         $match: {
             createdAt: {
-                $gte: new Date(startDate),
-                $lte: new Date(endDate),
+                $gte: startDate,
+                $lte: endDate,
             },
         },
     }];
