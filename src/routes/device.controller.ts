@@ -87,8 +87,28 @@ const getDeviceById = async (req: Request, res: Response) => {
     }
 };
 
+const getUserDevices = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        loggerService.error(`[${logNamespace}]: Unable to get device due to bad request.`);
+
+        throw new Error('Invalid arguments provided.');
+    }
+
+    try {
+        const result = await deviceService.getDeviceById(userId);
+
+        return res.json(result);
+    } catch (error) {
+        loggerService.error(`[${logNamespace}]: Could not get device due to error: ${error}`);
+
+        throw new Error('Unable to get device');
+    }
+};
+
 const deleteDeviceById = async (req: Request, res: Response) => {
-    const { id } = req.body;
+    const { id } = req.params;
 
     if (!id) {
         loggerService.error(`[${logNamespace}]: Unable to delete device due to bad request.`);
@@ -111,6 +131,6 @@ router.get('/', expressAsyncHandler(getDevices));
 router.get('/:id', expressAsyncHandler(getDeviceById));
 router.post('/', expressAsyncHandler(createDevice));
 router.put('/:id', expressAsyncHandler(updateDevice));
-router.delete('/', expressAsyncHandler(deleteDeviceById));
+router.delete('/:id', expressAsyncHandler(deleteDeviceById));
 
 export const controller = router;

@@ -70,6 +70,19 @@ const getDeviceById = async (id: string): Promise<IDevice> => {
     return device;
 };
 
+const getDevicesByUserId = async (id: string): Promise<IDevice[]> => {
+    loggerService.debug(`[${logNamespace}]: getDevicesByUserId(): Fetching devices for user ${id}.`);
+
+    const devices = await Device.find({ userId: id }).exec();
+
+    if (!devices) {
+        loggerService.debug(`[${logNamespace}]: getDevicesByUserId(): No devices found.`);
+        return null;
+    }
+
+    return devices;
+};
+
 const isExisting = async (name: string): Promise<boolean> => {
     const device = await Device.find({ name }).exec();
 
@@ -82,4 +95,5 @@ export const deviceService = {
     deleteDevice,
     getDevices,
     getDeviceById,
+    getDevicesByUserId,
 };
