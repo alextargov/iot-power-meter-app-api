@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
+import { ObjectId } from 'mongodb';
 
 export interface IDevice {
     id?: string;
-    userId: string;
+    userId: ObjectId;
     name: string;
+    key: string;
     description: string;
     isRunning: boolean;
     createdAt?: number;
@@ -16,16 +18,22 @@ export interface IDeviceDocument extends IDevice, mongoose.Document {
 
 const Schema = mongoose.Schema;
 
-const schemaOptions = {
+const schemaOptions: mongoose.SchemaOptions = {
     collection: 'devices',
     minimize: false,
     strict: true,
     timestamps: true,
+    versionKey: false,
+    id: true,
 };
 
 const deviceSchema = new Schema(
     {
         name: {
+            type: mongoose.SchemaTypes.String,
+            required: true,
+        },
+        key: {
             type: mongoose.SchemaTypes.String,
             required: true,
         },
@@ -39,7 +47,6 @@ const deviceSchema = new Schema(
         },
         isRunning: {
             type: mongoose.SchemaTypes.Boolean,
-            required: true,
             default: false,
         },
         createdAt: {

@@ -13,23 +13,15 @@ const createDevice = async (content: IDevice): Promise<IDevice> => {
         throw new Error('Device exists');
     }
 
-    const device = await Device.create(content);
+    const newDevice = await Device.create(content);
+    const device = await Device.findById(newDevice.id).exec();
 
-    return {
-        ...content,
-        id: device.id,
-    };
+    return device;
 };
 
 const updateDevice = async (id: string, content: IDevice): Promise<IDevice> => {
     loggerService.debug(`[${logNamespace}]: updateDevice(): Updating device.`);
     loggerService.silly(`[${logNamespace}]: updateDevice(): Content for device: ${JSON.stringify(content)}`);
-
-    const isDeviceExisting = await isExisting(content.name);
-    if (isDeviceExisting) {
-        loggerService.debug(`[${logNamespace}]: updateDevice(): Device name exists.`);
-        throw new Error('Device exists');
-    }
 
     await Device.updateOne({ _id: id }, content).exec();
 
@@ -74,7 +66,6 @@ const getDevicesByUserId = async (id: string): Promise<IDevice[]> => {
     loggerService.debug(`[${logNamespace}]: getDevicesByUserId(): Fetching devices for user ${id}.`);
 
     const devices = await Device.find({ userId: id }).exec();
-
     if (!devices) {
         loggerService.debug(`[${logNamespace}]: getDevicesByUserId(): No devices found.`);
         return null;
@@ -84,8 +75,8 @@ const getDevicesByUserId = async (id: string): Promise<IDevice[]> => {
 };
 
 const isExisting = async (name: string): Promise<boolean> => {
-    const device = await Device.find({ name }).exec();
-
+    const device = await Device.findOne({ name }).exec();
+    console.log(device);
     return !!device;
 };
 

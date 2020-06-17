@@ -3,7 +3,6 @@ import expressAsyncHandler from 'express-async-handler';
 import { isEmpty, some } from 'lodash';
 
 import { loggerService } from '../services/logger';
-import { historicDataService } from '../services/historic-data';
 import { deviceService } from '../services/device';
 import { IDevice } from '../models/device';
 
@@ -87,7 +86,7 @@ const getDeviceById = async (req: Request, res: Response) => {
     }
 };
 
-const getUserDevices = async (req: Request, res: Response) => {
+const getDevicesByUserId = async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     if (!userId) {
@@ -97,7 +96,7 @@ const getUserDevices = async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await deviceService.getDeviceById(userId);
+        const result = await deviceService.getDevicesByUserId(userId);
 
         return res.json(result);
     } catch (error) {
@@ -128,6 +127,7 @@ const deleteDeviceById = async (req: Request, res: Response) => {
 };
 
 router.get('/', expressAsyncHandler(getDevices));
+router.get('/user/:userId', expressAsyncHandler(getDevicesByUserId));
 router.get('/:id', expressAsyncHandler(getDeviceById));
 router.post('/', expressAsyncHandler(createDevice));
 router.put('/:id', expressAsyncHandler(updateDevice));
