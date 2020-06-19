@@ -53,10 +53,10 @@ const getMeasurements = async (req: Request, res: Response) => {
 };
 
 const getApplianceMeasurements = async (req: Request, res: Response) => {
-    const { name } = req.params;
-
+    const { name, startDate, endDate, frame } = req.params as any;
+    console.log(name, startDate, endDate);
     try {
-        const result = await measurementService.getApplianceMeasurements(name);
+        const result = await measurementService.getDeviceLiveMeasurements(name, startDate, endDate);
 
         return res.json(result);
     } catch (error) {

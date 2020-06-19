@@ -31,9 +31,15 @@ const createMeasurement = async (content: IMeasurement): Promise<IMeasurement> =
     return data;
 };
 
-const getApplianceMeasurements = async (name: string): Promise<IMeasurement[]> => {
+const getDeviceLiveMeasurements = async (name: string, startDate: number, endDate: number): Promise<IMeasurement[]> => {
     const pipeline = [{
-        $match: { appliance: name },
+        $match: {
+            appliance: name,
+            createdAt: {
+                $gte: startDate,
+                $lte: endDate,
+            },
+        },
     }].concat(basePipeline as any);
 
     const result = await Measurement.aggregate(pipeline).exec();
@@ -78,5 +84,5 @@ export const measurementService = {
     createMeasurement,
     getLiveMeasurements,
     deleteMeasurements,
-    getApplianceMeasurements,
+    getDeviceLiveMeasurements,
 };

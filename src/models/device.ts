@@ -8,6 +8,12 @@ export interface IDevice {
     key: string;
     description: string;
     isRunning: boolean;
+    isCurrentAlarmEnabled: boolean;
+    isVoltageAlarmEnabled: boolean;
+    isPowerAlarmEnabled: boolean;
+    currentAlarmThreshold: number;
+    voltageAlarmThreshold: number;
+    powerAlarmThreshold: number;
     createdAt?: number;
     updatedAt?: number;
 }
@@ -48,6 +54,24 @@ const deviceSchema = new Schema(
         isRunning: {
             type: mongoose.SchemaTypes.Boolean,
             default: false,
+        },
+        isCurrentAlarmEnabled: {
+            type: mongoose.SchemaTypes.Boolean,
+        },
+        isVoltageAlarmEnabled: {
+            type: mongoose.SchemaTypes.Boolean,
+        },
+        isPowerAlarmEnabled: {
+            type: mongoose.SchemaTypes.Boolean,
+        },
+        currentAlarmThreshold: {
+            type: mongoose.SchemaTypes.Number,
+        },
+        voltageAlarmThreshold: {
+            type: mongoose.SchemaTypes.Number,
+        },
+        powerAlarmThreshold: {
+            type: mongoose.SchemaTypes.Number,
         },
         createdAt: {
             type: mongoose.SchemaTypes.Number,
