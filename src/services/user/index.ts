@@ -1,6 +1,7 @@
+import { ObjectId } from 'mongodb';
+
 import { loggerService } from '../logger';
 import { IUserAlarm, User } from '../../models/user';
-import { ObjectId } from 'mongodb';
 
 const logNamespace = 'UserService';
 
@@ -36,10 +37,7 @@ const getUserAlarms = async (userId: string) => {
                 _id: new ObjectId(userId),
             },
         },
-
         { $unwind: '$alarms' },
-
-        // Sort in descending order
         {
             $sort: {
                 'alarms.createdAt': -1,
