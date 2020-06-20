@@ -3,6 +3,8 @@ import { IDevice, Device } from '../../models/device';
 
 const logNamespace = 'DeviceService';
 
+let currentDeviceData: IDevice[] = [];
+
 const createDevice = async (content: IDevice): Promise<IDevice> => {
     loggerService.debug(`[${logNamespace}]: createDevice(): Creating device.`);
     loggerService.silly(`[${logNamespace}]: createDevice(): Content for device: ${JSON.stringify(content)}`);
@@ -14,9 +16,10 @@ const createDevice = async (content: IDevice): Promise<IDevice> => {
     }
 
     const newDevice = await Device.create(content);
-    const device = await Device.findById(newDevice.id).exec();
+    const devices = await Device.find().exec();
 
-    return device;
+    setCurrentDeviceData(devices);
+    return devices.find((device) => device.id === newDevice.id);
 };
 
 const updateDevice = async (id: string, content: IDevice): Promise<IDevice> => {
@@ -24,6 +27,9 @@ const updateDevice = async (id: string, content: IDevice): Promise<IDevice> => {
     loggerService.silly(`[${logNamespace}]: updateDevice(): Content for device: ${JSON.stringify(content)}`);
 
     await Device.updateOne({ _id: id }, content).exec();
+
+    const devices = await Device.find().exec();
+    setCurrentDeviceData(devices);
 
     return content;
 };
@@ -38,6 +44,9 @@ const deleteDevice = async (id: string): Promise<IDevice> => {
         return null;
     }
 
+    const devices = await Device.find().exec();
+    setCurrentDeviceData(devices);
+
     return Device.findByIdAndDelete(id).exec();
 };
 
@@ -45,6 +54,7 @@ const getDevices = async (): Promise<IDevice[]> => {
     loggerService.debug(`[${logNamespace}]: getDevices(): Fetching all devices.`);
 
     const devices = await Device.find().exec();
+    setCurrentDeviceData(devices);
 
     return devices;
 };
@@ -52,7 +62,10 @@ const getDevices = async (): Promise<IDevice[]> => {
 const getDeviceById = async (id: string): Promise<IDevice> => {
     loggerService.debug(`[${logNamespace}]: getDeviceById(): Fetching device by id ${id}.`);
 
-    const device = await Device.findById(id).exec();
+    const devices = await Device.find().exec();
+    setCurrentDeviceData(devices);
+
+    const device = devices.find((currentDevice) => currentDevice.id === id);
 
     if (!device) {
         loggerService.debug(`[${logNamespace}]: getDeviceById(): No device found.`);
@@ -66,6 +79,8 @@ const getDevicesByUserId = async (id: string): Promise<IDevice[]> => {
     loggerService.debug(`[${logNamespace}]: getDevicesByUserId(): Fetching devices for user ${id}.`);
 
     const devices = await Device.find({ userId: id }).exec();
+    setCurrentDeviceData(devices);
+
     if (!devices) {
         loggerService.debug(`[${logNamespace}]: getDevicesByUserId(): No devices found.`);
         return null;
@@ -76,8 +91,13 @@ const getDevicesByUserId = async (id: string): Promise<IDevice[]> => {
 
 const isExisting = async (name: string): Promise<boolean> => {
     const device = await Device.findOne({ name }).exec();
-    console.log(device);
+
     return !!device;
+};
+
+const getCurrentDeviceData = () => currentDeviceData;
+const setCurrentDeviceData = (devices) => {
+    currentDeviceData = devices;
 };
 
 export const deviceService = {
@@ -87,4 +107,5 @@ export const deviceService = {
     getDevices,
     getDeviceById,
     getDevicesByUserId,
+    getCurrentDeviceData,
 };

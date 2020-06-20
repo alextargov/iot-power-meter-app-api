@@ -1,10 +1,25 @@
 import mongoose from 'mongoose';
 
+export enum UserAlarmEnum {
+    Current = 'Current',
+    Voltage = 'Voltage',
+    Power = 'Power',
+}
+
+export interface IUserAlarm {
+    read: boolean;
+    threshold: number;
+    value: number;
+    device: string;
+    createdAt: number;
+    type: UserAlarmEnum;
+}
+
 export interface IUser {
     id?: string;
     username: string;
     password: string;
-
+    alarms: IUserAlarm[];
     createdAt?: number;
     updatedAt?: number;
 }
@@ -34,6 +49,9 @@ const userSchema = new Schema(
         },
         createdAt: {
             type: mongoose.SchemaTypes.Number,
+        },
+        alarms: {
+            type: mongoose.SchemaTypes.Mixed,
         },
     },
     schemaOptions,

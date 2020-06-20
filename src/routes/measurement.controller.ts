@@ -6,12 +6,19 @@ import { loggerService } from '../services/logger';
 import { measurementService } from '../services/measurement';
 import { historicDataService } from '../services/historic-data';
 import { ITimeFrame } from '../services/time-frame-mapper/time-frame.interface';
+import { IMeasurement } from '../models/measurement';
+import { deviceService } from '../services/device';
+import { SocketEvent } from '../constants/socket';
+import { authenticationService } from '../services/authentication';
+import { IUserAlarm, UserAlarmEnum } from '../models/user';
+import { userService } from '../services/user';
+import { socketsService } from '../services/sockets';
 
 const logNamespace = 'MeasurementController';
 const router = Router();
 
 const createMeasurement = async (req: Request, res: Response) => {
-    const content = req.body;
+    const content = req.body as IMeasurement;
     const { startDate, endDate } = req.query as unknown as ITimeFrame;
 
     if (some([content], isEmpty)) {
@@ -23,11 +30,59 @@ const createMeasurement = async (req: Request, res: Response) => {
     loggerService.debug(`[${logNamespace}]: Creating measurement.`);
 
     try {
-        await measurementService.createMeasurement(content);
+        const measurement = await measurementService.createMeasurement(content);
 
-        const result = await measurementService.getLiveMeasurements(startDate, endDate);
+        loggerService.debug(`[${logNamespace}]: Checking for device alarms.`);
 
-        return res.json(result);
+        const { payload: user } = authenticationService.decode(req.headers.token) as any;
+        const socketConnection = socketsService.userConnections.get(user._id);
+        console.log(!!user, !!socketConnection, socketsService.userConnections.size);
+
+        console.log(user, socketsService.userConnections.has(user._id));
+
+        if (user && socketConnection) {
+            const userAlarm: IUserAlarm = {
+                read: false,
+                createdAt: new Date().getTime(),
+                threshold: null,
+                value: null,
+                device: null,
+                type: null,
+            };
+
+            console.log('userAlarm', userAlarm);
+
+            deviceService.getCurrentDeviceData().forEach(async (device) => {
+                userAlarm.device = device.name;
+                if (device.isCurrentAlarmEnabled && content.current > device.currentAlarmThreshold) {
+                    userAlarm.threshold = device.currentAlarmThreshold;
+                    userAlarm.value = content.current;
+                    userAlarm.type = UserAlarmEnum.Current;
+                    socketConnection.emit(SocketEvent.ALARM, userAlarm);
+                    await userService.setUserAlarms(user._id, userAlarm);
+                }
+
+                if (device.isVoltageAlarmEnabled && content.voltage > device.voltageAlarmThreshold) {
+                    userAlarm.threshold = device.voltageAlarmThreshold;
+                    userAlarm.value = content.voltage;
+                    userAlarm.type = UserAlarmEnum.Voltage;
+                    socketConnection.emit(SocketEvent.ALARM, userAlarm);
+                    await userService.setUserAlarms(user._id, userAlarm);
+                }
+
+                if (device.isPowerAlarmEnabled && content.power > device.powerAlarmThreshold) {
+                    userAlarm.threshold = device.powerAlarmThreshold;
+                    userAlarm.value = content.power;
+                    userAlarm.type = UserAlarmEnum.Power;
+                    socketConnection.emit(SocketEvent.ALARM, userAlarm);
+                    await userService.setUserAlarms(user._id, userAlarm);
+                }
+            });
+        }
+
+        // const result = await measurementService.getLiveMeasurements(startDate, endDate);
+
+        return res.json(measurement);
     } catch (error) {
         loggerService.error(`[${logNamespace}]: Could not create measurement due to error: ${error}`);
 
@@ -54,7 +109,7 @@ const getMeasurements = async (req: Request, res: Response) => {
 
 const getApplianceMeasurements = async (req: Request, res: Response) => {
     const { name, startDate, endDate, frame } = req.params as any;
-    console.log(name, startDate, endDate);
+
     try {
         const result = await measurementService.getDeviceLiveMeasurements(name, startDate, endDate);
 

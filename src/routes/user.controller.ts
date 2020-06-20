@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import { User } from '../models/user';
 import { loggerService } from '../services/logger';
 import { authenticationService } from '../services/authentication';
+import { userService } from '../services/user';
 
 const logNamespace = 'UserController';
 const router = Router();
@@ -66,7 +67,45 @@ const register = async (req: Request, res: Response) => {
     }
 };
 
+const getUserAlarms = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        loggerService.debug(`[${logNamespace}]: getUserAlarms(): No userId provided`);
+    }
+
+    try {
+        const result = await userService.getUserAlarms(userId);
+
+        res.json(result);
+    } catch (error) {
+        loggerService.error(`[${logNamespace}]: Could not get user alarms for "${userId}" due to error: ${error}`);
+
+        throw new Error('Unable to fetch user alarms.');
+    }
+};
+
+const readUserAlarms = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        loggerService.debug(`[${logNamespace}]: readUserAlarms(): No userId provided`);
+    }
+
+    try {
+        const result = await userService.readUserAlarms(userId);
+
+        res.json(result);
+    } catch (error) {
+        loggerService.error(`[${logNamespace}]: Could not set to read user alarms for "${userId}" due to error: ${error}`);
+
+        throw new Error('Unable to set to read user alarms.');
+    }
+};
+
+router.post('/:userId/alarms/read', expressAsyncHandler(readUserAlarms));
 router.post('/login', expressAsyncHandler(login));
 router.post('/register', expressAsyncHandler(register));
+router.get('/:userId/alarms', expressAsyncHandler(getUserAlarms));
 
 export const controller = router;
