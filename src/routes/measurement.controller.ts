@@ -30,15 +30,13 @@ const createMeasurement = async (req: Request, res: Response) => {
     loggerService.debug(`[${logNamespace}]: Creating measurement.`);
 
     try {
+        content.createdAt = content.createdAt || new Date().getTime();
         const measurement = await measurementService.createMeasurement(content);
 
         loggerService.debug(`[${logNamespace}]: Checking for device alarms.`);
 
         const { payload: user } = authenticationService.decode(req.headers.token) as any;
         const socketConnection = socketsService.userConnections.get(user._id);
-        console.log(!!user, !!socketConnection, socketsService.userConnections.size);
-
-        console.log(user, socketsService.userConnections.has(user._id));
 
         if (user && socketConnection) {
             const userAlarm: IUserAlarm = {
@@ -49,8 +47,6 @@ const createMeasurement = async (req: Request, res: Response) => {
                 device: null,
                 type: null,
             };
-
-            console.log('userAlarm', userAlarm);
 
             deviceService.getCurrentDeviceData().forEach(async (device) => {
                 userAlarm.device = device.name;
