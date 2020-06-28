@@ -26,6 +26,7 @@ const updateDevice = async (id: string, content: IDevice): Promise<IDevice> => {
     loggerService.debug(`[${logNamespace}]: updateDevice(): Updating device.`);
     loggerService.silly(`[${logNamespace}]: updateDevice(): Content for device: ${JSON.stringify(content)}`);
 
+    content.updatedAt = new Date().getTime();
     await Device.updateOne({ _id: id }, content).exec();
 
     const devices = await Device.find().exec();
