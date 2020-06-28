@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 export interface IDevice {
     id?: string;
     userId: ObjectId;
+    deviceId: string;
     name: string;
     key: string;
     description: string;
@@ -48,6 +49,10 @@ const deviceSchema = new Schema(
             required: true,
         },
         userId: {
+            type: mongoose.SchemaTypes.String,
+            required: true,
+        },
+        deviceId: {
             type: mongoose.SchemaTypes.String,
             required: true,
         },
