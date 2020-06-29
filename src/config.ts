@@ -58,6 +58,14 @@ export const schema: convict.Schema<any> = {
             env: 'APP_DB_DATABASE',
         },
     },
+    sensor: {
+        relayEndpoint: {
+            doc: 'ESP32 relay update endpoint',
+            format: '*',
+            default: '/relay',
+            env: 'APP_SENSOR_RELAY_ENDPOINT',
+        },
+    },
     server: {
         cors: {
             methods: {

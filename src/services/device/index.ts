@@ -1,5 +1,8 @@
+import * as requestPromise from 'request-promise-native';
+
 import { loggerService } from '../logger';
 import { IDevice, Device } from '../../models/device';
+import { config } from '../../config';
 
 const logNamespace = 'DeviceService';
 
@@ -19,6 +22,15 @@ const createDevice = async (content: IDevice): Promise<IDevice> => {
     const devices = await Device.find().exec();
 
     setCurrentDeviceData(devices);
+
+    try {
+        const response = await sendDataToSensor(content.host, content.deviceId, content.isRunning);
+
+        console.log('Response', response);
+    } catch (error) {
+        console.log('Error', error);
+    }
+
     return devices.find((device) => device.id === newDevice.id);
 };
 
@@ -31,6 +43,14 @@ const updateDevice = async (id: string, content: IDevice): Promise<IDevice> => {
 
     const devices = await Device.find().exec();
     setCurrentDeviceData(devices);
+
+    try {
+        const response = await sendDataToSensor(content.host, content.deviceId, content.isRunning);
+
+        console.log('Response', response);
+    } catch (error) {
+        console.log('Error', error);
+    }
 
     return content;
 };
@@ -99,6 +119,18 @@ const isExisting = async (name: string): Promise<boolean> => {
 const getCurrentDeviceData = () => currentDeviceData;
 const setCurrentDeviceData = (devices) => {
     currentDeviceData = devices;
+};
+
+const sendDataToSensor = (deviceHost: string, id: string, status: boolean) => {
+    const relayEndpoint = config.get('sensor.relayEndpoint');
+    return requestPromise.post(`${deviceHost}${relayEndpoint}`, {
+        body: {
+            status: status ? 1 : 0,
+            id,
+        },
+        json: true,
+        timeout: 5000,
+    });
 };
 
 export const deviceService = {

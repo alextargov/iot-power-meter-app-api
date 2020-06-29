@@ -77,7 +77,8 @@ const getDeviceById = async (req: Request, res: Response) => {
 
     try {
         const result = await deviceService.getDeviceById(id);
-
+        res.header('Access-Control-Allow-Origin', '*'); // update to match the domain you will make the request from
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
         return res.json(result);
     } catch (error) {
         loggerService.error(`[${logNamespace}]: Could not get device due to error: ${error}`);
