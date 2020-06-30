@@ -13,7 +13,7 @@ const generateData = () => {
     return setInterval(() => {
         const data = {
             voltage: random(minVoltage, maxVoltage),
-            appliance: 'main',
+            deviceId: 'dee11d4e-63c6-4d90-983c-5c9f1e79e96c',
             current: random(minCurrent, maxCurrent),
             createdAt: (new Date()).getTime(),
         } as IMeasurement;
