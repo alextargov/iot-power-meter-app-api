@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 export interface IMeasurement {
     id?: string;
-    appliance?: string;
+    deviceId?: string;
     current: number;
     voltage: number;
     power?: number;
@@ -24,7 +24,7 @@ const schemaOptions = {
 };
 
 const measurementSchema = new mongoose.Schema({
-    appliance: {
+    deviceId: {
         type: mongoose.SchemaTypes.String,
         required: true,
     },
