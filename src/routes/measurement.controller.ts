@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import expressAsyncHandler from 'express-async-handler';
-import { isEmpty, some } from 'lodash';
+import { isEmpty, some, random } from 'lodash';
+import moment from 'moment';
 
 import { loggerService } from '../services/logger';
 import { measurementService } from '../services/measurement';
@@ -35,7 +36,7 @@ const createMeasurement = async (req: Request, res: Response) => {
 
         loggerService.debug(`[${logNamespace}]: Checking for device alarms.`);
 
-        const { payload: user } = authenticationService.decode(req.headers.token) as any;
+        const { payload: user } = authenticationService.decode(req.headers.authorization.split('Bearer ')[1]) as any;
         const socketConnection = socketsService.userConnections.get(user._id);
 
         if (user && socketConnection) {
@@ -90,7 +91,7 @@ const getMeasurements = async (req: Request, res: Response) => {
     const { startDate, endDate, frame } = req.query as unknown as ITimeFrame;
 
     try {
-        const getLiveMeasurements = measurementService.getLiveMeasurements(startDate, endDate);
+        const getLiveMeasurements = measurementService.getLiveMeasurements(startDate, endDate, frame);
         const getHistoricData = historicDataService.getHistoricData(startDate, endDate, frame);
 
         const [liveMeasurements, historicData] = await Promise.all([getLiveMeasurements, getHistoricData]);
@@ -104,10 +105,11 @@ const getMeasurements = async (req: Request, res: Response) => {
 };
 
 const getApplianceMeasurements = async (req: Request, res: Response) => {
-    const { name, startDate, endDate, frame } = req.params as any;
+    const { name } = req.params;
+    const { startDate, endDate, frame } = req.query as unknown as ITimeFrame;
 
     try {
-        const result = await measurementService.getDeviceLiveMeasurements(name, startDate, endDate);
+        const result = await measurementService.getDeviceLiveMeasurements(name, startDate, endDate, frame);
 
         return res.json(result);
     } catch (error) {
@@ -115,13 +117,43 @@ const getApplianceMeasurements = async (req: Request, res: Response) => {
             throw error;
         }
 
-        loggerService.error(`[${logNamespace}]: Could not fetch "${name}" appliance measurement due to error: ${error}`);
+        loggerService.error(`[${logNamespace}]: Could not fetch "${name}" device measurement due to error: ${error}`);
 
-        throw new Error('Unable to fetch appliance measurement.');
+        throw new Error('Unable to fetch device measurement.');
+    }
+};
+
+const bulkSimulation = async (req: Request, res: Response) => {
+    let momentDate = moment().startOf('day');
+    let date = new Date(momentDate.toDate()).getTime();
+
+    try {
+        while (date <= new Date(moment().endOf('day').toDate()).getTime()) {
+            // tslint:disable-next-line: no-magic-numbers
+            const current = random(2, 5, true);
+            // tslint:disable-next-line: no-magic-numbers
+            const voltage = random(220, 235, true);
+            await measurementService.createMeasurement({
+                deviceId: 'dee11d4e-63c6-4d90-983c-5c9f1e79e96c',
+                current,
+                voltage,
+                power: current * voltage,
+                createdAt: date,
+            });
+            loggerService.debug(`[${logNamespace}]: bulkSimulation() Created measurement for date ${new Date(date)}`);
+            // tslint:disable-next-line: no-magic-numbers
+            momentDate = momentDate.add(5, 'seconds');
+            date = new Date(momentDate.toDate()).getTime();
+        }
+
+        return res.json({ok: true});
+    } catch (error) {
+        //
     }
 };
 
 router.get('/', expressAsyncHandler(getMeasurements));
+router.post('/bulkSimulation', expressAsyncHandler(bulkSimulation));
 router.get('/:name', expressAsyncHandler(getApplianceMeasurements));
 router.post('/', expressAsyncHandler(createMeasurement));
 
