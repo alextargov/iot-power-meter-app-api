@@ -1,5 +1,9 @@
+import { groupBy } from 'lodash';
+import moment from 'moment';
+
 import { loggerService } from '../logger';
 import { IMeasurement, Measurement } from '../../models/measurement';
+import { TimeFrames } from '../time-frame-mapper/time-frames.enum';
 
 const logNamespace = 'MeasurementService';
 
@@ -31,22 +35,27 @@ const createMeasurement = async (content: IMeasurement): Promise<IMeasurement> =
     return data;
 };
 
-const getDeviceLiveMeasurements = async (name: string, startDate: number, endDate: number): Promise<IMeasurement[]> => {
+const getDeviceLiveMeasurements = async (
+    deviceId: string,
+    startDate: number,
+    endDate: number,
+    frame: TimeFrames,
+): Promise<IMeasurement[]> => {
     const pipeline = [{
         $match: {
-            appliance: name,
+            deviceId,
             createdAt: {
                 $gte: startDate,
                 $lte: endDate,
             },
         },
     }].concat(basePipeline as any);
-
+    console.log(deviceId, startDate, endDate, frame);
     const result = await Measurement.aggregate(pipeline).exec();
-    return result || [];
+    return getSampledMeasurementData(result, startDate, endDate, frame) || [];
 };
 
-const getLiveMeasurements = async (startDate: number, endDate: number): Promise<IMeasurement[]> => {
+const getLiveMeasurements = async (startDate: number, endDate: number, frame: TimeFrames): Promise<IMeasurement[]> => {
     loggerService.debug(
         `[${logNamespace}]: getLiveMeasurements(): Get live data from ${startDate} to ${endDate}`,
     );
@@ -63,8 +72,7 @@ const getLiveMeasurements = async (startDate: number, endDate: number): Promise<
     ].concat(basePipeline as any);
 
     const result = await Measurement.aggregate(pipeline).exec();
-
-    return result || [];
+    return getSampledMeasurementData(result, startDate, endDate, frame) || [];
 };
 
 const deleteMeasurements = async (startDate: number, endDate: number): Promise<void> => {
@@ -78,6 +86,60 @@ const deleteMeasurements = async (startDate: number, endDate: number): Promise<v
     }];
 
     await Measurement.deleteMany(pipeline).exec();
+};
+
+const groupMeasurementsByNMinutes = (measurements: IMeasurement[], minutes: number) => {
+    const seconds = 60;
+    const milliseconds = 1000;
+    const groupInterval = milliseconds * seconds * minutes;
+
+    const groupedObject = groupBy(measurements, (measurement) => {
+        return Math.floor(Number(measurement.createdAt) / groupInterval);
+    });
+
+    return Object.keys(groupedObject).map((key) => {
+        const reducedData = groupedObject[key].reduce((collection, measurement) => ({
+            ...collection,
+            deviceId: measurement.deviceId,
+            current: collection.current + measurement.current,
+            voltage: collection.voltage + measurement.voltage,
+            power: collection.power + measurement.power,
+            createdAt: Number(key) * groupInterval,
+            occurrences: (collection as any).occurrences + 1,
+        }), { current: 0, voltage: 0, power: 0, deviceId: null, occurrences: 0, createdAt: null } as any);
+        const averagedData: IMeasurement = {
+            deviceId: reducedData.deviceId,
+            createdAt: moment(new Date(Number(key) * groupInterval)).valueOf(),
+            current: reducedData.current / reducedData.occurrences,
+            voltage: reducedData.voltage / reducedData.occurrences,
+            power: reducedData.power / reducedData.occurrences,
+            id: reducedData.id,
+        };
+
+        return averagedData;
+    });
+};
+
+const getSampledMeasurementData = (
+    measurements: IMeasurement[],
+    startDate: number,
+    endDate: number,
+    frame: TimeFrames,
+): IMeasurement[] => {
+    if (frame === TimeFrames.today &&
+        moment().startOf('day').valueOf() === startDate &&
+        moment().endOf('day').valueOf() === endDate
+    ) {
+        const tenMinutesIntervalGrouping = 10;
+        return groupMeasurementsByNMinutes(measurements, tenMinutesIntervalGrouping);
+    }
+
+    if (frame === TimeFrames.last7days || frame === TimeFrames.last30days) {
+        const sixtyMinutesIntervalGrouping = 60;
+        return groupMeasurementsByNMinutes(measurements, sixtyMinutesIntervalGrouping);
+    }
+
+    return measurements;
 };
 
 export const measurementService = {

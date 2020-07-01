@@ -14,6 +14,7 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
     const result = await Config.findOne({ key: 'timeFrames' }).exec();
     const wholeDay = isUndefined(routeTimeFrame.wholeDay);
 
+    // tslint:disable-next-line: cyclomatic-complexity
     return result.value.reduce((collection, config) => {
         switch (config.frame) {
             case TimeFrames.last30days:
@@ -22,8 +23,8 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     [config.frame]: {
                         frame: config.frame,
                         // tslint:disable-next-line: no-magic-numbers
-                        startDate: moment.utc().subtract(30, 'days').startOf('day').valueOf(),
-                        endDate: moment.utc().endOf('day').valueOf(),
+                        startDate: moment().subtract(30, 'days').startOf('day').valueOf(),
+                        endDate: moment().endOf('day').valueOf(),
                     },
                 };
             case TimeFrames.last7days:
@@ -32,8 +33,8 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     [config.frame]: {
                         frame: config.frame,
                         // tslint:disable-next-line: no-magic-numbers
-                        startDate: moment.utc().subtract(7, 'days').startOf('day').valueOf(),
-                        endDate: moment.utc().endOf('day').valueOf(),
+                        startDate: moment().subtract(7, 'days').startOf('day').valueOf(),
+                        endDate: moment().endOf('day').valueOf(),
                     },
                 };
             case TimeFrames.today:
@@ -41,8 +42,27 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     ...collection,
                     [config.frame]: {
                         frame: config.frame,
-                        startDate: moment.utc().startOf('day').valueOf(),
-                        endDate: moment.utc().endOf('day').valueOf(),
+                        startDate: routeTimeFrame.startDate ? routeTimeFrame.startDate : moment().startOf('day').valueOf(),
+                        endDate: routeTimeFrame.endDate ? routeTimeFrame.endDate : moment().endOf('day').valueOf(),
+                    },
+                };
+            case TimeFrames.todayPartly:
+                return {
+                    ...collection,
+                    [config.frame]: {
+                        frame: config.frame,
+                        startDate: routeTimeFrame.startDate,
+                        endDate: routeTimeFrame.endDate,
+                    },
+                };
+            case TimeFrames.todayLive:
+                const fiveMinuteFrame = 5;
+                return {
+                    ...collection,
+                    [config.frame]: {
+                        frame: config.frame,
+                        startDate: moment().subtract(fiveMinuteFrame, 'minutes').valueOf(),
+                        endDate: moment().valueOf(),
                     },
                 };
             case TimeFrames.custom:
@@ -52,11 +72,11 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     [config.frame]: {
                         frame: config.frame,
                         startDate: wholeDay ?
-                            moment.utc(routeTimeFrame.startDate).startOf('day').valueOf() :
-                            moment.utc(routeTimeFrame.startDate).valueOf(),
+                            moment(routeTimeFrame.startDate).startOf('day').valueOf() :
+                            moment(routeTimeFrame.startDate).valueOf(),
                         endDate: wholeDay ?
-                            moment.utc(routeTimeFrame.endDate).endOf('day').valueOf() :
-                            moment.utc(routeTimeFrame.endDate).valueOf(),
+                            moment(routeTimeFrame.endDate).endOf('day').valueOf() :
+                            moment(routeTimeFrame.endDate).valueOf(),
                     },
                 };
         }

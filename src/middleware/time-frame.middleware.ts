@@ -8,8 +8,8 @@ export const timeFrameMiddleware = async (req: Request, res: Response, next: Nex
         const { frame, startDate, endDate, wholeDay } = req.query as any;
         const data = {
             frame,
-            startDate: req.query.startDate ? moment(new Date(startDate)).valueOf() : moment().valueOf(),
-            endDate: req.query.endDate ? moment(new Date(endDate)).valueOf() : moment().valueOf(),
+            startDate: req.query.startDate ? moment(new Date(startDate)).valueOf() : null,
+            endDate: req.query.endDate ? moment(new Date(endDate)).valueOf() : null,
             wholeDay,
         };
 
