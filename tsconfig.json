@@ -7,9 +7,9 @@
         "target": "es6",
         "sourceMap": true,
         "outDir": "./dist",
-        "baseUrl": "./"
+        "baseUrl": "./",
     },
     "exclude": [
         "node_modules"
-    ]
+    ],
 }
