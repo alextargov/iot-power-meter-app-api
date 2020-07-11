@@ -317,3 +317,4 @@ $RECYCLE.BIN/
 /config
 /dist
 /.stryker-tmp
+_build

@@ -7,12 +7,6 @@ convict.addParser([
 ]);
 
 export const schema: convict.Schema<any> = {
-    cluster: {
-        doc: 'The cluster being managed, should have a corresponding cluster configuration in Vault.',
-        format: '*',
-        default: null,
-        env: 'APP_CLUSTER',
-    },
     environment: {
         doc: 'The application environment.',
         format: [
@@ -143,7 +137,3 @@ const configFiles = [
 config.loadFile(configFiles);
 
 config.validate();
-
-if (config.get('cluster') === null) {
-    throw new Error('Cluster not provided.');
-}
