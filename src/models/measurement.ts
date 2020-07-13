@@ -7,7 +7,7 @@ export interface IMeasurement {
     voltage: number;
     power?: number;
 
-    createdAt?: number | Date;
+    createdAt?: number;
     updatedAt?: number;
 }
 

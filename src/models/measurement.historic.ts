@@ -3,11 +3,13 @@ import { IMeasurement } from './measurement';
 
 export interface IMeasurementHistoric {
     id?: string;
-    averageCurrent: number;
-    averageVoltage: number;
-    averagePower?: number;
-    measurements: IMeasurement[];
+    current: number;
+    voltage: number;
+    power?: number;
+    dataNumberCollected: number;
     date?: number;
+    createdAt: number;
+    deviceId: string;
 }
 
 interface IMeasurementHistoricDocument extends IMeasurement, mongoose.Document {
@@ -24,24 +26,28 @@ const schemaOptions = {
 };
 
 const measurementSchema = new mongoose.Schema({
-    measurements: {
-        type: mongoose.SchemaTypes.Mixed,
-        required: true,
-    },
-    date: {
-        type: mongoose.SchemaTypes.Date,
-        required: true,
-    },
-    averageCurrent: {
+    dataNumberCollected: {
         type: mongoose.SchemaTypes.Number,
         required: true,
     },
-    averageVoltage: {
+    createdAt: {
         type: mongoose.SchemaTypes.Number,
         required: true,
     },
-    averagePower: {
+    current: {
         type: mongoose.SchemaTypes.Number,
+        required: true,
+    },
+    voltage: {
+        type: mongoose.SchemaTypes.Number,
+        required: true,
+    },
+    power: {
+        type: mongoose.SchemaTypes.Number,
+        required: true,
+    },
+    deviceId: {
+        type: mongoose.SchemaTypes.String,
         required: true,
     },
 }, schemaOptions);

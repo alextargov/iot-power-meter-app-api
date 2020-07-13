@@ -1,4 +1,4 @@
-import { groupBy } from 'lodash';
+import { groupBy, isEqual, some } from 'lodash';
 import moment from 'moment';
 
 import { loggerService } from '../logger';
@@ -50,7 +50,7 @@ const getDeviceLiveMeasurements = async (
             },
         },
     }].concat(basePipeline as any);
-    console.log(deviceId, startDate, endDate, frame);
+
     const result = await Measurement.aggregate(pipeline).exec();
     return getSampledMeasurementData(result, startDate, endDate, frame) || [];
 };
@@ -70,8 +70,8 @@ const getLiveMeasurements = async (startDate: number, endDate: number, frame: Ti
             },
         },
     ].concat(basePipeline as any);
-
     const result = await Measurement.aggregate(pipeline).exec();
+
     return getSampledMeasurementData(result, startDate, endDate, frame) || [];
 };
 
@@ -107,13 +107,43 @@ const groupMeasurementsByNMinutes = (measurements: IMeasurement[], minutes: numb
             createdAt: Number(key) * groupInterval,
             occurrences: (collection as any).occurrences + 1,
         }), { current: 0, voltage: 0, power: 0, deviceId: null, occurrences: 0, createdAt: null } as any);
+
         const averagedData: IMeasurement = {
             deviceId: reducedData.deviceId,
             createdAt: moment(new Date(Number(key) * groupInterval)).valueOf(),
             current: reducedData.current / reducedData.occurrences,
             voltage: reducedData.voltage / reducedData.occurrences,
             power: reducedData.power / reducedData.occurrences,
-            id: reducedData.id,
+            id: reducedData._id,
+        };
+
+        return averagedData;
+    });
+};
+
+const groupMeasurementsByDay = (measurements: IMeasurement[]) => {
+    const groupedObject = groupBy(measurements, (measurement) => {
+        return moment(measurement.createdAt).startOf('day').valueOf();
+    });
+
+    return Object.keys(groupedObject).map((key) => {
+        const reducedData = groupedObject[key].reduce((collection, measurement) => ({
+            ...collection,
+            deviceId: measurement.deviceId,
+            current: collection.current + measurement.current,
+            voltage: collection.voltage + measurement.voltage,
+            power: collection.power + measurement.power,
+            createdAt: Number(key),
+            occurrences: (collection as any).occurrences + 1,
+        }), { current: 0, voltage: 0, power: 0, deviceId: null, occurrences: 0, createdAt: null } as any);
+
+        const averagedData: IMeasurement = {
+            deviceId: reducedData.deviceId,
+            createdAt: Number(key),
+            current: reducedData.current / reducedData.occurrences,
+            voltage: reducedData.voltage / reducedData.occurrences,
+            power: reducedData.power / reducedData.occurrences,
+            id: reducedData._id,
         };
 
         return averagedData;
@@ -134,11 +164,12 @@ const getSampledMeasurementData = (
         return groupMeasurementsByNMinutes(measurements, tenMinutesIntervalGrouping);
     }
 
-    if (frame === TimeFrames.last7days || frame === TimeFrames.last30days) {
-        const sixtyMinutesIntervalGrouping = 60;
-        return groupMeasurementsByNMinutes(measurements, sixtyMinutesIntervalGrouping);
+    if (some([TimeFrames.last7days, TimeFrames.last30days, TimeFrames.custom], (iteratee) => isEqual(iteratee, frame))) {
+        return groupMeasurementsByDay(measurements);
     }
-
+    if (measurements.length) {
+        console.log(measurements[0].createdAt);
+    }
     return measurements;
 };
 

@@ -61,8 +61,8 @@ const mapTimeFrames = async (routeTimeFrame: ITimeFrame): Promise<ITimeFrame> =>
                     ...collection,
                     [config.frame]: {
                         frame: config.frame,
-                        startDate: moment().subtract(fiveMinuteFrame, 'minutes').valueOf(),
-                        endDate: moment().valueOf(),
+                        startDate: routeTimeFrame.startDate || moment().subtract(fiveMinuteFrame, 'minutes').valueOf(),
+                        endDate: routeTimeFrame.endDate || moment().valueOf(),
                     },
                 };
             case TimeFrames.custom:

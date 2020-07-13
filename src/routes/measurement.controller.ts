@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import expressAsyncHandler from 'express-async-handler';
-import { isEmpty, some, random } from 'lodash';
+import { isEmpty, some, random, isEqual } from 'lodash';
 import moment from 'moment';
 
 import { loggerService } from '../services/logger';
@@ -14,19 +14,25 @@ import { authenticationService } from '../services/authentication';
 import { IUserAlarm, UserAlarmEnum } from '../models/user';
 import { userService } from '../services/user';
 import { socketsService } from '../services/sockets';
+import { TimeFrames } from '../services/time-frame-mapper/time-frames.enum';
+import { IMeasurementHistoric } from '../models/measurement.historic';
 
 const logNamespace = 'MeasurementController';
 const router = Router();
 
 const createMeasurement = async (req: Request, res: Response) => {
-    const content = req.body as IMeasurement;
-    const { startDate, endDate } = req.query as unknown as ITimeFrame;
-
-    if (some([content], isEmpty)) {
+    if (some([req.body], isEmpty)) {
         loggerService.error(`[${logNamespace}]: Unable to create measurement due to bad request.`);
 
         throw new Error('Invalid arguments provided.');
     }
+
+    const content = {
+        ...req.body,
+        power: Number(req.body.power),
+        current: Number(req.body.current),
+        voltage: Number(req.body.voltage),
+    } as IMeasurement;
 
     loggerService.debug(`[${logNamespace}]: Creating measurement.`);
 
@@ -36,8 +42,8 @@ const createMeasurement = async (req: Request, res: Response) => {
 
         loggerService.debug(`[${logNamespace}]: Checking for device alarms.`);
 
-        const { payload: user } = authenticationService.decode(req.headers.authorization.split('Bearer ')[1]) as any;
-        const socketConnection = socketsService.userConnections.get(user._id);
+        const user = await userService.getUserByDeviceId(content.deviceId);
+        const socketConnection = socketsService.userConnections.get(user._id as string);
 
         if (user && socketConnection) {
             const userAlarm: IUserAlarm = {
@@ -56,7 +62,7 @@ const createMeasurement = async (req: Request, res: Response) => {
                     userAlarm.value = content.current;
                     userAlarm.type = UserAlarmEnum.Current;
                     socketConnection.emit(SocketEvent.ALARM, userAlarm);
-                    await userService.setUserAlarms(user._id, userAlarm);
+                    await userService.setUserAlarms(user._id as string, userAlarm);
                 }
 
                 if (device.isVoltageAlarmEnabled && content.voltage > device.voltageAlarmThreshold) {
@@ -64,7 +70,7 @@ const createMeasurement = async (req: Request, res: Response) => {
                     userAlarm.value = content.voltage;
                     userAlarm.type = UserAlarmEnum.Voltage;
                     socketConnection.emit(SocketEvent.ALARM, userAlarm);
-                    await userService.setUserAlarms(user._id, userAlarm);
+                    await userService.setUserAlarms(user._id as string, userAlarm);
                 }
 
                 if (device.isPowerAlarmEnabled && content.power > device.powerAlarmThreshold) {
@@ -72,7 +78,7 @@ const createMeasurement = async (req: Request, res: Response) => {
                     userAlarm.value = content.power;
                     userAlarm.type = UserAlarmEnum.Power;
                     socketConnection.emit(SocketEvent.ALARM, userAlarm);
-                    await userService.setUserAlarms(user._id, userAlarm);
+                    await userService.setUserAlarms(user._id as string, userAlarm);
                 }
             });
         }
@@ -92,11 +98,19 @@ const getMeasurements = async (req: Request, res: Response) => {
 
     try {
         const getLiveMeasurements = measurementService.getLiveMeasurements(startDate, endDate, frame);
-        const getHistoricData = historicDataService.getHistoricData(startDate, endDate, frame);
+        let getHistoricData;
+
+        if (some([TimeFrames.last7days, TimeFrames.last30days, TimeFrames.custom], (iteratee) => isEqual(iteratee, frame))) {
+            getHistoricData = historicDataService.getHistoricData(startDate, frame);
+        }
 
         const [liveMeasurements, historicData] = await Promise.all([getLiveMeasurements, getHistoricData]);
 
-        return res.json([].concat(liveMeasurements, historicData));
+        const result = getHistoricData ?
+            ([] as IMeasurement[]).concat(liveMeasurements, historicData).sort((a, b) => a.createdAt - b.createdAt) :
+            liveMeasurements;
+
+        return res.json(result);
     } catch (error) {
         loggerService.error(`[${logNamespace}]: Could not list measurements due to error: ${error}`);
 
@@ -109,7 +123,18 @@ const getApplianceMeasurements = async (req: Request, res: Response) => {
     const { startDate, endDate, frame } = req.query as unknown as ITimeFrame;
 
     try {
-        const result = await measurementService.getDeviceLiveMeasurements(name, startDate, endDate, frame);
+        const getLiveMeasurements = await measurementService.getDeviceLiveMeasurements(name, startDate, endDate, frame);
+        let getHistoricData;
+
+        if (some([TimeFrames.last7days, TimeFrames.last30days, TimeFrames.custom], (iteratee) => isEqual(iteratee, frame))) {
+            getHistoricData = historicDataService.getDeviceHistoricData(startDate, frame, name);
+        }
+
+        const [liveMeasurements, historicData] = await Promise.all([getLiveMeasurements, getHistoricData]);
+
+        const result = getHistoricData ?
+            ([] as IMeasurement[]).concat(liveMeasurements, historicData).sort((a, b) => a.createdAt - b.createdAt) :
+            liveMeasurements;
 
         return res.json(result);
     } catch (error) {
