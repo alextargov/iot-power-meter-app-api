@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { ObjectId } from 'mongodb';
 
 export enum UserAlarmEnum {
     Current = 'Current',
@@ -17,6 +18,7 @@ export interface IUserAlarm {
 
 export interface IUser {
     id?: string;
+    _id: string | ObjectId;
     username: string;
     password: string;
     alarms: IUserAlarm[];
@@ -26,6 +28,7 @@ export interface IUser {
 
 export interface IUserDocument extends IUser, mongoose.Document {
    id: string;
+   _id: string | ObjectId;
 }
 
 const Schema = mongoose.Schema;

@@ -1,7 +1,8 @@
 import { ObjectId } from 'mongodb';
 
 import { loggerService } from '../logger';
-import { IUserAlarm, User } from '../../models/user';
+import { IUserAlarm, User, IUser } from '../../models/user';
+import { deviceService } from '../device';
 
 const logNamespace = 'UserService';
 
@@ -75,8 +76,25 @@ const readUserAlarms = async (userId: string) => {
     return getUserAlarms(userId);
 };
 
+const getUserByDeviceId = async (deviceId: string): Promise<IUser> => {
+    if (!deviceId) {
+        loggerService.debug(`[${logNamespace}]: getUserByDeviceId(): No deviceId provided`);
+    }
+
+    loggerService.silly(`[${logNamespace}]: getUserByDeviceId(): Getting user by deviceId ${deviceId}`);
+
+    const device = await deviceService.getDeviceByDeviceId(deviceId);
+
+    if (!device) {
+        return null;
+    }
+
+    return User.findById(device.userId).exec();
+};
+
 export const userService = {
     setUserAlarms,
     getUserAlarms,
     readUserAlarms,
+    getUserByDeviceId,
 };
