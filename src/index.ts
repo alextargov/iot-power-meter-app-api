@@ -7,6 +7,7 @@ import { mongo } from './services/mongoose';
 import { historicDataService } from './services/historic-data';
 import { deviceService } from './services/device';
 import { socketsService } from './services/sockets';
+import { simulationService } from './services/simulation';
 
 mongo.connect()
     .then(() => {
@@ -22,10 +23,14 @@ mongo.connect()
 
             loggerService.info(`Server listening at http://${host}:${port}`);
 
-            const cronJob = historicDataService.initCronJob();
+            const historicDataCron = historicDataService.initCronJob();
+            const deviceCron = deviceService.initCronJob();
             await deviceService.getDevices();
 
-            historicDataService.startJob(cronJob);
+            // simulationService.generateData();
+
+            historicDataService.startJob(historicDataCron);
+            deviceService.startJob(deviceCron);
         });
     })
     .catch((e) => {

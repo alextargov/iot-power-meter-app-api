@@ -1,12 +1,18 @@
 import mongoose from 'mongoose';
-import { ObjectId } from 'mongodb';
+
+export interface IScheduledControl {
+    startDate: Date;
+    startTime: string;
+    endDate: Date;
+    endTime: string;
+}
 
 export interface IDevice {
     id?: string;
-    userId: ObjectId;
+    userId: string;
+    name: string;
     deviceId: string;
     host: string;
-    name: string;
     key: string;
     description: string;
     isRunning: boolean;
@@ -16,6 +22,7 @@ export interface IDevice {
     currentAlarmThreshold: number;
     voltageAlarmThreshold: number;
     powerAlarmThreshold: number;
+    scheduledControl: IScheduledControl[];
     createdAt?: number;
     updatedAt?: number;
 }

@@ -1,3 +1,5 @@
+import { CronJob } from 'cron';
+import moment from 'moment';
 import * as requestPromise from 'request-promise-native';
 
 import { loggerService } from '../logger';
@@ -96,6 +98,22 @@ const getDeviceById = async (id: string): Promise<IDevice> => {
     return device;
 };
 
+const getDeviceByDeviceId = async (id: string): Promise<IDevice> => {
+    loggerService.debug(`[${logNamespace}]: getDeviceByDeviceId(): Fetching device by id ${id}.`);
+
+    const devices = await Device.find().exec();
+    setCurrentDeviceData(devices);
+
+    const device = devices.find((currentDevice) => currentDevice.deviceId === id);
+
+    if (!device) {
+        loggerService.debug(`[${logNamespace}]: getDeviceByDeviceId(): No device found.`);
+        return null;
+    }
+
+    return device;
+};
+
 const getDevicesByUserId = async (id: string): Promise<IDevice[]> => {
     loggerService.debug(`[${logNamespace}]: getDevicesByUserId(): Fetching devices for user ${id}.`);
 
@@ -121,16 +139,52 @@ const setCurrentDeviceData = (devices) => {
     currentDeviceData = devices;
 };
 
-const sendDataToSensor = (deviceHost: string, id: string, status: boolean) => {
+const sendDataToSensor = (deviceHost: string, id: string, isRunning: boolean) => {
     const relayEndpoint = config.get('sensor.relayEndpoint');
+    const body = {
+        isRunning,
+        id,
+    };
+    loggerService.debug(`[${logNamespace}]: sendDataToSensor(): Sending data to sensor: ${JSON.stringify(body)}`);
     return requestPromise.post(`${deviceHost}${relayEndpoint}`, {
-        body: {
-            status: status ? 1 : 0,
-            id,
-        },
+        body,
         json: true,
         timeout: 5000,
     });
+};
+
+const initCronJob = () => {
+    return new CronJob('0 * * * * *', async () => {
+        const devices = await getDevices();
+        const now = moment();
+
+        devices.forEach((device) => {
+            device.scheduledControl.forEach((deviceSchedule) => {
+                const [startHour, startMinute] = deviceSchedule.startTime.split(':');
+                const [endHour, endMinute] = deviceSchedule.endTime.split(':');
+                const start = moment(deviceSchedule.startDate).hours(+startHour).minutes(+startMinute).startOf('minute');
+                const end = moment(deviceSchedule.endDate).hours(+endHour).minutes(+endMinute).startOf('minute');
+                const isInTimePeriod = now.isBetween(start, end);
+
+                if (isInTimePeriod && !device.isRunning) {
+                    sendDataToSensor(device.host, device.deviceId, true);
+                    return;
+                }
+
+                if (!isInTimePeriod && device.isRunning) {
+                    sendDataToSensor(device.host, device.deviceId, false);
+                }
+            });
+        });
+    });
+};
+
+const stopJob = (job: CronJob) => {
+    job.stop();
+};
+
+const startJob = (job: CronJob) => {
+    job.start();
 };
 
 export const deviceService = {
@@ -141,4 +195,8 @@ export const deviceService = {
     getDeviceById,
     getDevicesByUserId,
     getCurrentDeviceData,
+    getDeviceByDeviceId,
+    initCronJob,
+    startJob,
+    stopJob,
 };
