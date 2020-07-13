@@ -159,22 +159,24 @@ const initCronJob = () => {
         const now = moment();
 
         devices.forEach((device) => {
-            device.scheduledControl.forEach((deviceSchedule) => {
-                const [startHour, startMinute] = deviceSchedule.startTime.split(':');
-                const [endHour, endMinute] = deviceSchedule.endTime.split(':');
-                const start = moment(deviceSchedule.startDate).hours(+startHour).minutes(+startMinute).startOf('minute');
-                const end = moment(deviceSchedule.endDate).hours(+endHour).minutes(+endMinute).startOf('minute');
-                const isInTimePeriod = now.isBetween(start, end);
+            if (device.scheduledControl) {
+                device.scheduledControl.forEach((deviceSchedule) => {
+                    const [startHour, startMinute] = deviceSchedule.startTime.split(':');
+                    const [endHour, endMinute] = deviceSchedule.endTime.split(':');
+                    const start = moment(deviceSchedule.startDate).hours(+startHour).minutes(+startMinute).startOf('minute');
+                    const end = moment(deviceSchedule.endDate).hours(+endHour).minutes(+endMinute).startOf('minute');
+                    const isInTimePeriod = now.isBetween(start, end);
 
-                if (isInTimePeriod && !device.isRunning) {
-                    sendDataToSensor(device.host, device.deviceId, true);
-                    return;
-                }
+                    if (isInTimePeriod && !device.isRunning) {
+                        sendDataToSensor(device.host, device.deviceId, true);
+                        return;
+                    }
 
-                if (!isInTimePeriod && device.isRunning) {
-                    sendDataToSensor(device.host, device.deviceId, false);
-                }
-            });
+                    if (!isInTimePeriod && device.isRunning) {
+                        sendDataToSensor(device.host, device.deviceId, false);
+                    }
+                });
+            }
         });
     });
 };
