@@ -1,4 +1,5 @@
 import { CronJob } from 'cron';
+import { groupBy } from 'lodash';
 import moment from 'moment';
 
 import { loggerService } from '../logger';
@@ -24,42 +25,41 @@ const startJob = (job: CronJob) => {
 };
 
 const processHistoricData = async () => {
-    const processStartDay = moment.utc().subtract(1, 'day').startOf('day').valueOf();
-    const processEndDay = moment.utc().subtract(1, 'day').endOf('day').valueOf();
+    const processStartDay = moment().subtract(1, 'day').startOf('day').valueOf();
+    const processEndDay = moment().subtract(1, 'day').endOf('day').valueOf();
 
     loggerService.debug(`[${logNamespace}]: processHistoricData(): Processing historic data from day ${processStartDay}`);
 
     try {
-        const measurements = await measurementService.getLiveMeasurements(processStartDay, processEndDay);
+        const measurementGroups = groupBy(
+            await measurementService.getLiveMeasurements(processStartDay, processEndDay, null),
+            (measurement) => measurement.deviceId,
+        );
 
-        if (measurements.length) {
-            let current = 0;
-            let voltage = 0;
-            let power = 0;
+        Object.values(measurementGroups).forEach(async (measurements) => {
+            if (measurements.length) {
+                let current = 0;
+                let voltage = 0;
+                let power = 0;
 
-            const measurementsToDate: IMeasurement[] = measurements.map((measurement) => {
-                current += measurement.current;
-                voltage += measurement.voltage;
-                power += measurement.current;
+                measurements.forEach((measurement) => {
+                    current += measurement.current;
+                    voltage += measurement.voltage;
+                    power += measurement.current * measurement.voltage;
+                });
 
-                return {
-                    ...measurement,
-                    createdAt: new Date(measurement.createdAt),
+                const measurementHistoric: IMeasurementHistoric = {
+                    createdAt: processStartDay,
+                    dataNumberCollected: measurements.length,
+                    current: current / measurements.length,
+                    voltage: voltage / measurements.length,
+                    power: power / measurements.length,
+                    deviceId: measurements[0].deviceId,
                 };
-            });
 
-            const measurementHistoric: IMeasurementHistoric = {
-                date: processStartDay,
-                measurements: measurementsToDate,
-                averageCurrent: current / measurements.length,
-                averageVoltage: voltage / measurements.length,
-                averagePower: power / measurements.length,
-            };
-
-            await MeasurementHistoric.create({
-
-            });
-        }
+                await MeasurementHistoric.create(measurementHistoric);
+            }
+        });
     } catch (err) {
         loggerService.error(`[${logNamespace}]: processHistoricData(): Error ${processStartDay}`);
     }
@@ -119,6 +119,7 @@ const simplifyData = (data: IMeasurement[], timeFrame: TimeFrames): IMeasurement
     }, {} as any);
 
     return Object.values(filtered).map((item: any) => ({
+        // tslint:disable-next-line: no-magic-numbers
         createdAt: new Date(item.data.createdAt * 1000).getTime(),
         current: item.data.current / item.iteration,
         voltage: item.data.voltage / item.iteration,
@@ -126,40 +127,51 @@ const simplifyData = (data: IMeasurement[], timeFrame: TimeFrames): IMeasurement
     }));
 };
 
-const getHistoricData = async (startDate: number, endDate: number, frame: TimeFrames) => {
+const getHistoricData = async (startDate: number, frame: TimeFrames): Promise<IMeasurementHistoric[]> => {
     loggerService.debug(
-        `[${logNamespace}]: getHistoricData(): Get historic data from ${startDate} to ${endDate} in the time frame ${frame}`,
+        `[${logNamespace}]: getHistoricData(): Get historic data for ${startDate} in the time frame ${frame}`,
     );
 
     try {
         const pipeline = [
             {
                 $match: {
-                    date: {
-                        $gte: startDate,
-                        $lte: endDate,
-                    },
-                },
-            },
-            {
-                $project: {
-                    measurementDate: 0,
-                    updatedAt: 0,
+                    createdAt: { $gte: startDate },
                 },
             },
         ];
 
-        const data = (await MeasurementHistoric.aggregate(pipeline).exec())[0];
-
-        return simplifyData(data?.measurements, frame);
+        return MeasurementHistoric.aggregate(pipeline).exec();
     } catch (err) {
         loggerService.error(`[${logNamespace}]: getHistoricData(): Error ${err}`);
+    }
+};
+
+const getDeviceHistoricData = async (startDate: number, frame: TimeFrames, deviceId: string) => {
+    loggerService.debug(
+        `[${logNamespace}]: getDeviceHistoricData(): Get historic data for ${startDate} in the time frame ${frame}`,
+    );
+
+    try {
+        const pipeline = [
+            {
+                $match: {
+                    createdAt: { $gte: startDate },
+                    deviceId,
+                },
+            },
+        ];
+
+        return MeasurementHistoric.aggregate(pipeline).exec();
+    } catch (err) {
+        loggerService.error(`[${logNamespace}]: getDeviceHistoricData(): Error ${err}`);
     }
 };
 
 export const historicDataService = {
     processHistoricData,
     getHistoricData,
+    getDeviceHistoricData,
     initCronJob,
     startJob,
     stopJob,
