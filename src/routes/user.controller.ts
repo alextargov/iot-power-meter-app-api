@@ -15,6 +15,7 @@ const router = Router();
 const login = (req: Request, res: Response) => {
     passport.authenticate('local', { session: false}, (err, user, info) => {
         if (err || !user) {
+            // tslint:disable-next-line: no-magic-numbers
             return res.status(400).json({
                 message: err.message,
                 user,
@@ -45,7 +46,8 @@ const register = async (req: Request, res: Response) => {
     }
 
     try {
-        const salt = await bcrypt.genSalt(10);
+        const saltRounds = 10;
+        const salt = await bcrypt.genSalt(saltRounds);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         await User.create({
@@ -55,12 +57,14 @@ const register = async (req: Request, res: Response) => {
 
         loggerService.debug(`[${logNamespace}]: User "${username}" has been registered`);
 
+        // tslint:disable-next-line: no-magic-numbers
         return res.status(200).json({
             message: 'User created!',
         });
     } catch (error) {
         loggerService.error(`[${logNamespace}]: Could not register "${username}" due to error: ${error}`);
 
+        // tslint:disable-next-line: no-magic-numbers
         res.status(500).send({
             message: 'Error on user creation',
         });
