@@ -8,6 +8,7 @@ import * as path from 'path';
 import { loggerService } from './services/logger';
 import { User } from './models/user';
 import { config } from './config';
+import { omit } from 'lodash';
 
 const logNamespace = 'AuthConfig';
 const extractJWT = passportJWT.ExtractJwt;
@@ -29,7 +30,7 @@ passport.use(new passportLocal.Strategy(async (username, password, done) => {
             return done(null, false, { message: 'Incorrect password.' });
         }
 
-        return done(null, { ...user});
+        return done(null, { ...omit(user, 'alarms')});
     } catch (error) {
         loggerService.error(`[${logNamespace}] Could not login on local strategy due to ${error}`);
         done(error);
@@ -53,7 +54,7 @@ passport.use(new passportJWT.Strategy(
 
             const isEqual = jwtPayload.password === user.password;
 
-            return isEqual ? cb(null, user) : cb({ status: 500, message: 'Invalid user' });
+            return isEqual ? cb(null, omit(user, 'alarms')) : cb({ status: 500, message: 'Invalid user' });
         } catch (error) {
             loggerService.error(`[${logNamespace}] Could not login on JWT strategy due to ${error}`);
             return cb({ status: 500, error });
