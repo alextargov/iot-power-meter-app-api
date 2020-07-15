@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import expressAsyncHandler from 'express-async-handler';
-import { isEmpty, some, random, isEqual } from 'lodash';
+import { isEmpty, some, random, isEqual, cloneDeep } from 'lodash';
 import moment from 'moment';
 
 import { loggerService } from '../services/logger';
@@ -27,12 +27,7 @@ const createMeasurement = async (req: Request, res: Response) => {
         throw new Error('Invalid arguments provided.');
     }
 
-    const content = {
-        ...req.body,
-        power: Number(req.body.power),
-        current: Number(req.body.current),
-        voltage: Number(req.body.voltage),
-    } as IMeasurement;
+    const content = cloneDeep(req.body);
 
     loggerService.debug(`[${logNamespace}]: Creating measurement.`);
 
@@ -43,26 +38,25 @@ const createMeasurement = async (req: Request, res: Response) => {
         loggerService.debug(`[${logNamespace}]: Checking for device alarms.`);
 
         const user = await userService.getUserByDeviceId(content.deviceId);
-        const socketConnection = socketsService.userConnections.get(user._id as string);
+        const socketConnection = socketsService.userConnections.get(user._id.toString());
 
         if (user && socketConnection) {
-            const userAlarm: IUserAlarm = {
-                read: false,
-                createdAt: new Date().getTime(),
-                threshold: null,
-                value: null,
-                device: null,
-                type: null,
-            };
-
             deviceService.getCurrentDeviceData().forEach(async (device) => {
-                userAlarm.device = device.name;
+                const userAlarm: IUserAlarm = {
+                    read: false,
+                    createdAt: new Date().getTime(),
+                    threshold: null,
+                    value: null,
+                    device: device.name,
+                    type: null,
+                };
+
                 if (device.isCurrentAlarmEnabled && content.current > device.currentAlarmThreshold) {
                     userAlarm.threshold = device.currentAlarmThreshold;
                     userAlarm.value = content.current;
                     userAlarm.type = UserAlarmEnum.Current;
                     socketConnection.emit(SocketEvent.ALARM, userAlarm);
-                    await userService.setUserAlarms(user._id as string, userAlarm);
+                    await userService.setUserAlarms(user._id.toString() as string, userAlarm);
                 }
 
                 if (device.isVoltageAlarmEnabled && content.voltage > device.voltageAlarmThreshold) {
@@ -70,7 +64,7 @@ const createMeasurement = async (req: Request, res: Response) => {
                     userAlarm.value = content.voltage;
                     userAlarm.type = UserAlarmEnum.Voltage;
                     socketConnection.emit(SocketEvent.ALARM, userAlarm);
-                    await userService.setUserAlarms(user._id as string, userAlarm);
+                    await userService.setUserAlarms(user._id.toString() as string, userAlarm);
                 }
 
                 if (device.isPowerAlarmEnabled && content.power > device.powerAlarmThreshold) {
@@ -78,7 +72,7 @@ const createMeasurement = async (req: Request, res: Response) => {
                     userAlarm.value = content.power;
                     userAlarm.type = UserAlarmEnum.Power;
                     socketConnection.emit(SocketEvent.ALARM, userAlarm);
-                    await userService.setUserAlarms(user._id as string, userAlarm);
+                    await userService.setUserAlarms(user._id.toString() as string, userAlarm);
                 }
             });
         }
@@ -152,17 +146,23 @@ const bulkSimulation = async (req: Request, res: Response) => {
     let momentDate = moment().startOf('day');
     let date = new Date(momentDate.toDate()).getTime();
 
+    const minVoltage = 215;
+    const maxVoltage = 230;
+    const minCurrent = 1;
+    const maxCurrent = 5.99;
+    const minPowerFactor = 0.7;
+    const maxPowerFactor = 1;
+
     try {
         while (date <= new Date(moment().endOf('day').toDate()).getTime()) {
-            // tslint:disable-next-line: no-magic-numbers
-            const current = random(2, 5, true);
-            // tslint:disable-next-line: no-magic-numbers
-            const voltage = random(220, 235, true);
+            const powerFactor = random(minPowerFactor, maxPowerFactor, true);
+            const voltage = random(minVoltage, maxVoltage, true);
+            const current = random(minCurrent, maxCurrent, true);
             await measurementService.createMeasurement({
                 deviceId: 'dee11d4e-63c6-4d90-983c-5c9f1e79e96c',
                 current,
                 voltage,
-                power: current * voltage,
+                power: current * voltage * powerFactor,
                 createdAt: date,
             });
             loggerService.debug(`[${logNamespace}]: bulkSimulation() Created measurement for date ${new Date(date)}`);
