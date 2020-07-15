@@ -5,12 +5,13 @@ import * as requestPromise from 'request-promise-native';
 import { loggerService } from '../logger';
 import { IDevice, Device } from '../../models/device';
 import { config } from '../../config';
+import { noConnectionToDevice } from '../../constants/error-codes';
 
 const logNamespace = 'DeviceService';
 
 let currentDeviceData: IDevice[] = [];
 
-const createDevice = async (content: IDevice): Promise<IDevice> => {
+const createDevice = async (content: IDevice): Promise<{ error: number, data: IDevice }> => {
     loggerService.debug(`[${logNamespace}]: createDevice(): Creating device.`);
     loggerService.silly(`[${logNamespace}]: createDevice(): Content for device: ${JSON.stringify(content)}`);
 
@@ -22,7 +23,7 @@ const createDevice = async (content: IDevice): Promise<IDevice> => {
 
     const newDevice = await Device.create(content);
     const devices = await Device.find().exec();
-
+    const createdDevice = devices.find((device) => device.id === newDevice.id);
     setCurrentDeviceData(devices);
 
     try {
@@ -30,13 +31,16 @@ const createDevice = async (content: IDevice): Promise<IDevice> => {
 
         console.log('Response', response);
     } catch (error) {
-        console.log('Error', error);
+        return {
+            error: noConnectionToDevice,
+            data: createdDevice,
+        };
     }
 
-    return devices.find((device) => device.id === newDevice.id);
+    return { error: null, data: createdDevice };
 };
 
-const updateDevice = async (id: string, content: IDevice): Promise<IDevice> => {
+const updateDevice = async (id: string, content: IDevice): Promise<{ error: number, data: IDevice }> => {
     loggerService.debug(`[${logNamespace}]: updateDevice(): Updating device.`);
     loggerService.silly(`[${logNamespace}]: updateDevice(): Content for device: ${JSON.stringify(content)}`);
 
@@ -51,10 +55,13 @@ const updateDevice = async (id: string, content: IDevice): Promise<IDevice> => {
 
         console.log('Response', response);
     } catch (error) {
-        console.log('Error', error);
+        return {
+            error: noConnectionToDevice,
+            data: content,
+        };
     }
 
-    return content;
+    return { error: null, data: content };
 };
 
 const deleteDevice = async (id: string): Promise<IDevice> => {
