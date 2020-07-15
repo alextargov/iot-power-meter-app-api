@@ -9,13 +9,6 @@ const logNamespace = 'MeasurementService';
 
 const basePipeline = [
     {
-        $addFields: {
-            power: {
-                $multiply: ['$current', '$voltage'],
-            },
-        },
-    },
-    {
         $project: {
             updatedAt: 0,
         },
@@ -167,9 +160,7 @@ const getSampledMeasurementData = (
     if (some([TimeFrames.last7days, TimeFrames.last30days, TimeFrames.custom], (iteratee) => isEqual(iteratee, frame))) {
         return groupMeasurementsByDay(measurements);
     }
-    if (measurements.length) {
-        console.log(measurements[0].createdAt);
-    }
+
     return measurements;
 };
 

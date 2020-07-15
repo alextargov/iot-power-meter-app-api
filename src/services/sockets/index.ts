@@ -16,9 +16,9 @@ const initializeSocket = (server: Server, port) => {
         loggerService.debug(`[${logNamespace}]: initializeSocket(): Connected client on port ${port}`);
 
         socket.on(SocketEvent.AUTH, (userId: string) => {
-            loggerService.debug(`[${logNamespace}]: initializeSocket(): Event ${SocketEvent.AUTH} received`);
+            loggerService.debug(`[${logNamespace}]: initializeSocket(): Event ${SocketEvent.AUTH} received for user ${userId}`);
 
-            userConnections.set(userId, socket);
+            userConnections.set(userId.toString(), socket);
         });
 
         socket.on('disconnect', () => {

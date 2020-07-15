@@ -96,6 +96,9 @@ const deviceSchema = new Schema(
         updatedAt: {
             type: mongoose.SchemaTypes.Number,
         },
+        scheduledControl: {
+            type: mongoose.SchemaTypes.Mixed,
+        },
     },
     schemaOptions,
 );

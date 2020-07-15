@@ -7,7 +7,6 @@ import { mongo } from './services/mongoose';
 import { historicDataService } from './services/historic-data';
 import { deviceService } from './services/device';
 import { socketsService } from './services/sockets';
-import { simulationService } from './services/simulation';
 
 mongo.connect()
     .then(() => {
@@ -27,9 +26,8 @@ mongo.connect()
             const deviceCron = deviceService.initCronJob();
             await deviceService.getDevices();
 
-            // simulationService.generateData();
-
             historicDataService.startJob(historicDataCron);
+
             deviceService.startJob(deviceCron);
         });
     })

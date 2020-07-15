@@ -45,7 +45,7 @@ const processHistoricData = async () => {
                 measurements.forEach((measurement) => {
                     current += measurement.current;
                     voltage += measurement.voltage;
-                    power += measurement.current * measurement.voltage;
+                    power += measurement.power;
                 });
 
                 const measurementHistoric: IMeasurementHistoric = {
@@ -112,7 +112,7 @@ const simplifyData = (data: IMeasurement[], timeFrame: TimeFrames): IMeasurement
                     ...collection[date].data,
                     current: collection[date].data.current + item.current,
                     voltage: collection[date].data.voltage + item.voltage,
-                    power: collection[date].data.current + item.power,
+                    power: collection[date].data.power + item.power,
                 },
             },
         };
